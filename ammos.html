@@ -59,30 +59,29 @@
   <script>
     async function fetchSchedule() {
       try {
-        console.log('📍 Intentando fetch a AMMOS...');
-        const response = await fetch('/schedule/AMMOS?_=' + new Date().getTime());
-        console.log('📍 Status de la respuesta:', response.status);
+        const SHEET_ID = '1gr_yWuMPAHMUOFo4A3mTin6vqKrlK3CiCsNL98WnMF0';
+        const API_KEY = 'AIzaSyDxnfKcaFdfaWhlgCSerH4ilmMJsPQbvfs';
+        const response = await fetch(
+          `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/AMMOS!A1:I50?key=${API_KEY}`
+        );
         const data = await response.json();
-        console.log('📍 Datos recibidos:', data);
   
         const tableBody = document.querySelector('#schedule-table tbody');
         tableBody.innerHTML = '';
   
-        // Aseguramos que los datos están actualizados, saltando la primera fila (headers)
-        data.data.slice(1).forEach(row => {
+        data.values.slice(1).forEach(row => {
           if (row && row.length > 0) {
             const tr = document.createElement('tr');
-            for (let i = 0; i < 8; i++) { // Asegura 8 columnas por fila
+            for (let i = 0; i < 8; i++) {
               const td = document.createElement('td');
-              td.textContent = row[i] !== undefined ? row[i] : ''; // Agrega celdas vacías si no hay datos
+              td.textContent = row[i] !== undefined ? row[i] : '';
               tr.appendChild(td);
             }
             tableBody.appendChild(tr);
           }
         });
       } catch (error) {
-        console.error('❌ Error completo:', error);
-        console.error('❌ Mensaje de error:', error.message);
+        console.error('Error fetching schedule:', error);
       }
     }
 

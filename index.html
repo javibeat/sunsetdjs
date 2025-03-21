@@ -61,81 +61,83 @@
   <script>
     async function fetchSchedule() {
       try {
-        const response = await fetch('/schedule?_=' + new Date().getTime());
+        const SHEET_ID = '1gr_yWuMPAHMUOFo4A3mTin6vqKrlK3CiCsNL98WnMF0';
+        const API_KEY = 'AIzaSyDxnfKcaFdfaWhlgCSerH4ilmMJsPQbvfs';
+        const response = await fetch(
+          `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/Sheet1!A1:I50?key=${API_KEY}`
+        );
         const data = await response.json();
-  
-        const tableBody = document.querySelector('#schedule-table tbody');
-        tableBody.innerHTML = '';
         
         // Obtener la hora y el día actual en Dubai (UTC+4)
         const now = new Date();
-        // Crear fecha en UTC
         const utcNow = new Date(now.getTime() + now.getTimezoneOffset() * 60000);
-        // Convertir a hora de Dubai (UTC+4)
         const dubaiNow = new Date(utcNow.getTime() + (4 * 60 * 60000));
         const today = dubaiNow.getDay();
         const currentHour = dubaiNow.getHours();
-        const currentMinutes = dubaiNow.getMinutes();
         const adjustedDay = today === 0 ? 7 : today;
-  
-        console.log('Dubai time:', dubaiNow.toLocaleString(), 'Hour:', currentHour, 'Minutes:', currentMinutes, 'Day:', adjustedDay);
-  
-        data.data.slice(1).forEach((row) => {
-          if (row && row.length > 0) {
-            const tr = document.createElement('tr');
-  
-            for (let i = 0; i < 9; i++) {
-              const td = document.createElement('td');
-              
-              if (i === 0) { // Primera columna (nombre del DJ)
-                const nameContainer = document.createElement('div');
-                nameContainer.style.display = 'flex';
-                nameContainer.style.alignItems = 'center';
-                nameContainer.style.gap = '8px';
+    
+        const tableBody = document.querySelector('#schedule-table tbody');
+        tableBody.innerHTML = '';
+        
+        // Usar data.values directamente
+        if (data.values && data.values.length > 1) {
+          data.values.slice(1).forEach((row) => {
+            if (row && row.length > 0) {
+              const tr = document.createElement('tr');
+    
+              for (let i = 0; i < 9; i++) {
+                const td = document.createElement('td');
                 
-                const nameSpan = document.createElement('span');
-                nameSpan.textContent = row[i];
-                
-                const calendarBtn = document.createElement('button');
-                calendarBtn.className = 'calendar-btn';
-                calendarBtn.innerHTML = '<i class="fas fa-calendar-plus"></i>';
-                calendarBtn.title = 'Add to Calendar';
-                calendarBtn.onclick = () => createCalendarEvents(row);
-                
-                nameContainer.appendChild(nameSpan);
-                nameContainer.appendChild(calendarBtn);
-                td.appendChild(nameContainer);
-              } else {
-                td.textContent = row[i] !== undefined ? row[i] : '';
-              }
-  
-              if (i > 0 && i < 8 && row[i]) {
-                const timeMatch = row[i].match(/(\d+)(?::(\d+))?(?:\s*(?:AM|PM|am|pm))?[-\s]+(\d+)(?::(\d+))?(?:\s*(?:AM|PM|am|pm))?/i);
-                
-                if (timeMatch) {
-                  let startHour = parseInt(timeMatch[1]);
-                  let endHour = parseInt(timeMatch[3]);
+                if (i === 0) { // Primera columna (nombre del DJ)
+                  const nameContainer = document.createElement('div');
+                  nameContainer.style.display = 'flex';
+                  nameContainer.style.alignItems = 'center';
+                  nameContainer.style.gap = '8px';
                   
-                  if (row[i].toLowerCase().includes('pm')) {
-                    if (startHour < 12) startHour += 12;
-                    if (endHour < 12) endHour += 12;
-                  }
-  
-                  if (i === adjustedDay) {
-                    if (currentHour >= startHour && currentHour < endHour) {
-                      td.classList.add('current-shift');
-                    } else if (currentHour + 1 === startHour) {
-                      td.classList.add('next-shift');
+                  const nameSpan = document.createElement('span');
+                  nameSpan.textContent = row[i];
+                  
+                  const calendarBtn = document.createElement('button');
+                  calendarBtn.className = 'calendar-btn';
+                  calendarBtn.innerHTML = '<i class="fas fa-calendar-plus"></i>';
+                  calendarBtn.title = 'Add to Calendar';
+                  calendarBtn.onclick = () => createCalendarEvents(row);
+                  
+                  nameContainer.appendChild(nameSpan);
+                  nameContainer.appendChild(calendarBtn);
+                  td.appendChild(nameContainer);
+                } else {
+                  td.textContent = row[i] !== undefined ? row[i] : '';
+                }
+    
+                if (i > 0 && i < 8 && row[i]) {
+                  const timeMatch = row[i].match(/(\d+)(?::(\d+))?(?:\s*(?:AM|PM|am|pm))?[-\s]+(\d+)(?::(\d+))?(?:\s*(?:AM|PM|am|pm))?/i);
+                  
+                  if (timeMatch) {
+                    let startHour = parseInt(timeMatch[1]);
+                    let endHour = parseInt(timeMatch[3]);
+                    
+                    if (row[i].toLowerCase().includes('pm')) {
+                      if (startHour < 12) startHour += 12;
+                      if (endHour < 12) endHour += 12;
+                    }
+    
+                    if (i === adjustedDay) {
+                      if (currentHour >= startHour && currentHour < endHour) {
+                        td.classList.add('current-shift');
+                      } else if (currentHour + 1 === startHour) {
+                        td.classList.add('next-shift');
+                      }
                     }
                   }
                 }
+    
+                tr.appendChild(td);
               }
-  
-              tr.appendChild(td);
+              tableBody.appendChild(tr);
             }
-            tableBody.appendChild(tr);
-          }
-        });
+          });
+        }
       } catch (error) {
         console.error('Error fetching schedule:', error);
       }

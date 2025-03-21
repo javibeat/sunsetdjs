@@ -59,8 +59,11 @@
   <script>
     async function fetchSchedule() {
       try {
-        console.log('Fetching AZURE schedule...');
-        const response = await fetch('/schedule/AZURE?_=' + new Date().getTime());
+        const SHEET_ID = '1gr_yWuMPAHMUOFo4A3mTin6vqKrlK3CiCsNL98WnMF0';
+        const API_KEY = 'AIzaSyDxnfKcaFdfaWhlgCSerH4ilmMJsPQbvfs';
+        const response = await fetch(
+          `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/AZURE!A1:I50?key=${API_KEY}`
+        );
         const data = await response.json();
         console.log('Received data:', data);
         
