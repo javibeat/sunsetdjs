@@ -108,24 +108,29 @@
             const cellValue = row[i] ? row[i] : '—';
 
             if (i === 0) {
-              // Columna DJ: añade botón de calendario
-              const nameContainer = document.createElement('div');
-              nameContainer.style.display = 'flex';
-              nameContainer.style.alignItems = 'center';
-              nameContainer.style.gap = '8px';
-              
-              const nameSpan = document.createElement('span');
-              nameSpan.textContent = cellValue;
-              
-              const calendarBtn = document.createElement('button');
-              calendarBtn.className = 'calendar-btn';
-              calendarBtn.innerHTML = '<i class="fas fa-calendar-plus"></i>';
-              calendarBtn.title = 'Add to Calendar';
-              calendarBtn.onclick = () => createCalendarEvents(row);
-              
-              nameContainer.appendChild(nameSpan);
-              nameContainer.appendChild(calendarBtn);
-              td.appendChild(nameContainer);
+              if (cellValue !== '—') {
+                // Columna DJ: añade botón de calendario solo si hay un DJ
+                const nameContainer = document.createElement('div');
+                nameContainer.style.display = 'flex';
+                nameContainer.style.alignItems = 'center';
+                nameContainer.style.gap = '8px';
+                
+                const nameSpan = document.createElement('span');
+                nameSpan.textContent = cellValue;
+                
+                const calendarBtn = document.createElement('button');
+                calendarBtn.className = 'calendar-btn';
+                calendarBtn.innerHTML = '<i class="fas fa-calendar-plus"></i>';
+                calendarBtn.title = 'Add to Calendar';
+                calendarBtn.onclick = () => createCalendarEvents(row);
+                
+                nameContainer.appendChild(nameSpan);
+                nameContainer.appendChild(calendarBtn);
+                td.appendChild(nameContainer);
+              } else {
+                // Si no hay DJ, muestra simplemente un guion
+                td.textContent = '—';
+              }
             } else {
               td.textContent = cellValue;
             }

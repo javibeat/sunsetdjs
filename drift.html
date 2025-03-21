@@ -44,7 +44,6 @@
             <th>Friday</th>
             <th>Saturday</th>
             <th>Sunday</th>
-            <th>Total Gigs Week</th>
           </tr>
         </thead>
         <tbody></tbody>
@@ -62,70 +61,62 @@
     async function fetchSchedule() {
       try {
         const SHEET_ID = '1gr_yWuMPAHMUOFo4A3mTin6vqKrlK3CiCsNL98WnMF0';
-        // Indica la pestaña DRIFT con el parámetro sheet=DRIFT
+        // Parámetro sheet=DRIFT y out:json
         const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?sheet=DRIFT&tqx=out:json`;
-        
-        console.log('Intentando acceder a:', url);
+        console.log('Fetching from:', url);
+
         const response = await fetch(url);
-        
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+
         const text = await response.text();
         const jsonText = text.substring(47).slice(0, -2);
         const data = JSON.parse(jsonText);
-        
-        // Transformar la data a arrays
-        const values = data.table.rows.map(row => 
+
+        // Convertir a arrays
+        const values = data.table.rows.map(row =>
           row.c.map(cell => (cell ? cell.v : ''))
         );
-        
-        console.log('Datos recibidos (sin slice):', values);
-        
+        console.log('Recibidos (sin slice):', values);
+
         const tableBody = document.querySelector('#schedule-table tbody');
         tableBody.innerHTML = '';
 
         if (!values || values.length === 0) {
-          console.error('No values in response:', data);
-          tableBody.innerHTML = '<tr><td colspan="9">No schedule data available.</td></tr>';
+          console.error('No data in response');
+          tableBody.innerHTML = '<tr><td colspan="8">No schedule data available.</td></tr>';
           return;
         }
 
-        // Asumir que la primera fila es encabezado
+        // Omitir la primera fila si es encabezado
         const dataRows = values.slice(1);
 
-        dataRows.forEach((row, rowIndex) => {
-          console.log(`Processing row ${rowIndex}:`, row);
-          // Evitar filas vacías
+        dataRows.forEach(row => {
+          // Si la fila está completamente vacía, la ignoramos
           if (!row.some(col => String(col).trim() !== '')) return;
 
           const tr = document.createElement('tr');
 
-          // 9 columnas: 0=DJ, 1..7=días, 8=Total Gigs Week
-          for (let i = 0; i < 9; i++) {
+          // 8 columnas: 0=DJ, 1..7 = Monday..Sunday
+          for (let i = 0; i < 8; i++) {
             const td = document.createElement('td');
             const cellValue = row[i] ? row[i] : '—';
 
             if (i === 0) {
-              // Solo mostrar el nombre del DJ (sin botón de calendario)
-              const nameSpan = document.createElement('span');
-              nameSpan.textContent = cellValue;
-              td.appendChild(nameSpan);
+              // Solo DJ name
+              td.textContent = cellValue;
             } else {
               td.textContent = cellValue;
             }
 
-            // Resaltar turnos (columnas 1..7)
+            // Resaltar turnos
             if (i >= 1 && i <= 7 && cellValue !== '—') {
               const timeMatch = cellValue.match(
                 /(\d+)(?::(\d+))?(?:\s*(AM|PM))?\s*-\s*(\d+)(?::(\d+))?(?:\s*(AM|PM))?/i
               );
-              
               if (timeMatch) {
                 let [ , startH, startM, startAP, endH, endM, endAP ] = timeMatch;
-                startH = parseInt(startH, 10);
-                endH = parseInt(endH, 10);
+                startH = parseInt(startH || '0', 10);
+                endH = parseInt(endH || '0', 10);
                 startM = parseInt(startM || '0', 10);
                 endM = parseInt(endM || '0', 10);
 
@@ -139,8 +130,7 @@
                 const scheduleEnd = endH * 60 + endM;
                 const now = new Date();
                 const currentTime = now.getHours() * 60 + now.getMinutes();
-
-                // Mapear domingo a 7
+                // Mapear domingo=0 => 7
                 const currentDay = now.getDay();
                 const dayIndex = (currentDay === 0) ? 7 : currentDay;
 
@@ -149,13 +139,16 @@
                 const isEvening = (startH >= 18 && (endH < 24 || (endH === 23 && endM <= 30)));
 
                 if (i === dayIndex) {
+                  // Si es el día actual y la hora cae en el turno => verde
                   if (currentTime >= scheduleStart && currentTime < scheduleEnd) {
                     td.classList.add('current-shift');
                   } else {
+                    // Si no, morning/evening
                     if (isMorning) td.classList.add('morning-shift');
                     else if (isEvening) td.classList.add('evening-shift');
                   }
                 } else {
+                  // Otro día
                   if (isMorning) td.classList.add('morning-shift');
                   else if (isEvening) td.classList.add('evening-shift');
                 }
@@ -167,8 +160,8 @@
         });
       } catch (error) {
         console.error('Error fetching schedule:', error);
-        document.querySelector('#schedule-table tbody').innerHTML = 
-          '<tr><td colspan="9">Failed to load schedule. Please try again later.</td></tr>';
+        document.querySelector('#schedule-table tbody').innerHTML =
+          '<tr><td colspan="8">Failed to load schedule.</td></tr>';
       }
     }
 
@@ -177,7 +170,7 @@
       document.getElementById('current-month').textContent = new Date()
         .toLocaleString('en-US', { month: 'long' })
         .toUpperCase();
-      
+
       const hamburger = document.querySelector('.hamburger');
       const navMenu = document.querySelector('.nav-menu');
       const venuesToggle = document.querySelector('.venues-toggle');
@@ -207,11 +200,6 @@
         alert('Schedule link copied to clipboard!');
       }
     });
-
-    // Funciones de calendario (se mantienen, pero ya no se invocan desde este archivo)
-    function createCalendarEvents(djSchedule) {
-      // Esta función ya no se utilizará en drift.html
-    }
   </script>
 </body>
 </html>

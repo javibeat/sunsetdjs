@@ -369,6 +369,7 @@ tr.current-day td {
   padding: 4px;
   margin-left: 8px;
   transition: color 0.3s ease;
+  font-size: 1.2rem;
 }
 
 .calendar-btn:hover {
