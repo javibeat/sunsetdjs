@@ -6,6 +6,7 @@
   <title>DRIFT Schedule</title>
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap" rel="stylesheet">
 </head>
 <body>
   <nav class="navbar">
@@ -43,6 +44,7 @@
             <th>Friday</th>
             <th>Saturday</th>
             <th>Sunday</th>
+            <th>Total Gigs Week</th>
           </tr>
         </thead>
         <tbody></tbody>
@@ -60,37 +62,122 @@
     async function fetchSchedule() {
       try {
         const SHEET_ID = '1gr_yWuMPAHMUOFo4A3mTin6vqKrlK3CiCsNL98WnMF0';
-        const API_KEY = 'AIzaSyDxnfKcaFdfaWhlgCSerH4ilmMJsPQbvfs';
-        const response = await fetch(
-          `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/DRIFT!A1:I50?key=${API_KEY}`
+        // Indica la pestaña DRIFT con el parámetro sheet=DRIFT
+        const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?sheet=DRIFT&tqx=out:json`;
+        
+        console.log('Intentando acceder a:', url);
+        const response = await fetch(url);
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const text = await response.text();
+        const jsonText = text.substring(47).slice(0, -2);
+        const data = JSON.parse(jsonText);
+        
+        // Transformar la data a arrays
+        const values = data.table.rows.map(row => 
+          row.c.map(cell => (cell ? cell.v : ''))
         );
-        const data = await response.json();
-  
+        
+        console.log('Datos recibidos (sin slice):', values);
+        
         const tableBody = document.querySelector('#schedule-table tbody');
         tableBody.innerHTML = '';
-  
-        // Usar data.values en lugar de data.data
-        data.values.slice(1).forEach(row => {
-          if (row && row.length > 0) {
-            const tr = document.createElement('tr');
-            for (let i = 0; i < 8; i++) {
-              const td = document.createElement('td');
-              td.textContent = row[i] !== undefined ? row[i] : '';
-              tr.appendChild(td);
+
+        if (!values || values.length === 0) {
+          console.error('No values in response:', data);
+          tableBody.innerHTML = '<tr><td colspan="9">No schedule data available.</td></tr>';
+          return;
+        }
+
+        // Asumir que la primera fila es encabezado
+        const dataRows = values.slice(1);
+
+        dataRows.forEach((row, rowIndex) => {
+          console.log(`Processing row ${rowIndex}:`, row);
+          // Evitar filas vacías
+          if (!row.some(col => String(col).trim() !== '')) return;
+
+          const tr = document.createElement('tr');
+
+          // 9 columnas: 0=DJ, 1..7=días, 8=Total Gigs Week
+          for (let i = 0; i < 9; i++) {
+            const td = document.createElement('td');
+            const cellValue = row[i] ? row[i] : '—';
+
+            if (i === 0) {
+              // Solo mostrar el nombre del DJ (sin botón de calendario)
+              const nameSpan = document.createElement('span');
+              nameSpan.textContent = cellValue;
+              td.appendChild(nameSpan);
+            } else {
+              td.textContent = cellValue;
             }
-            tableBody.appendChild(tr);
+
+            // Resaltar turnos (columnas 1..7)
+            if (i >= 1 && i <= 7 && cellValue !== '—') {
+              const timeMatch = cellValue.match(
+                /(\d+)(?::(\d+))?(?:\s*(AM|PM))?\s*-\s*(\d+)(?::(\d+))?(?:\s*(AM|PM))?/i
+              );
+              
+              if (timeMatch) {
+                let [ , startH, startM, startAP, endH, endM, endAP ] = timeMatch;
+                startH = parseInt(startH, 10);
+                endH = parseInt(endH, 10);
+                startM = parseInt(startM || '0', 10);
+                endM = parseInt(endM || '0', 10);
+
+                // Convertir a 24h
+                if (startAP && startAP.toLowerCase().includes('p') && startH < 12) startH += 12;
+                if (endAP && endAP.toLowerCase().includes('p') && endH < 12) endH += 12;
+                if (startAP && startAP.toLowerCase().includes('a') && startH === 12) startH = 0;
+                if (endAP && endAP.toLowerCase().includes('a') && endH === 12) endH = 0;
+
+                const scheduleStart = startH * 60 + startM;
+                const scheduleEnd = endH * 60 + endM;
+                const now = new Date();
+                const currentTime = now.getHours() * 60 + now.getMinutes();
+
+                // Mapear domingo a 7
+                const currentDay = now.getDay();
+                const dayIndex = (currentDay === 0) ? 7 : currentDay;
+
+                // Rangos
+                const isMorning = (startH >= 12 && endH <= 18);
+                const isEvening = (startH >= 18 && (endH < 24 || (endH === 23 && endM <= 30)));
+
+                if (i === dayIndex) {
+                  if (currentTime >= scheduleStart && currentTime < scheduleEnd) {
+                    td.classList.add('current-shift');
+                  } else {
+                    if (isMorning) td.classList.add('morning-shift');
+                    else if (isEvening) td.classList.add('evening-shift');
+                  }
+                } else {
+                  if (isMorning) td.classList.add('morning-shift');
+                  else if (isEvening) td.classList.add('evening-shift');
+                }
+              }
+            }
+            tr.appendChild(td);
           }
+          tableBody.appendChild(tr);
         });
       } catch (error) {
         console.error('Error fetching schedule:', error);
+        document.querySelector('#schedule-table tbody').innerHTML = 
+          '<tr><td colspan="9">Failed to load schedule. Please try again later.</td></tr>';
       }
     }
 
-    setInterval(fetchSchedule, 60000);
-    document.getElementById('current-month').textContent = new Date().toLocaleString('en-US', { month: 'long' }).toUpperCase();
-    window.onload = fetchSchedule;
-
     document.addEventListener('DOMContentLoaded', () => {
+      fetchSchedule();
+      document.getElementById('current-month').textContent = new Date()
+        .toLocaleString('en-US', { month: 'long' })
+        .toUpperCase();
+      
       const hamburger = document.querySelector('.hamburger');
       const navMenu = document.querySelector('.nav-menu');
       const venuesToggle = document.querySelector('.venues-toggle');
@@ -99,14 +186,14 @@
         hamburger.classList.toggle('active');
         navMenu.classList.toggle('active');
       });
-  
+      
       venuesToggle.addEventListener('click', (e) => {
         e.preventDefault();
         e.stopPropagation();
         venuesToggle.parentElement.classList.toggle('submenu-active');
       });
     });
-    
+
     document.getElementById('shareButton').addEventListener('click', async () => {
       try {
         const url = window.location.href;
@@ -120,6 +207,11 @@
         alert('Schedule link copied to clipboard!');
       }
     });
+
+    // Funciones de calendario (se mantienen, pero ya no se invocan desde este archivo)
+    function createCalendarEvents(djSchedule) {
+      // Esta función ya no se utilizará en drift.html
+    }
   </script>
 </body>
 </html>
