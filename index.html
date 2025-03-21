@@ -77,84 +77,117 @@
         
         // Transform the data to match our expected format
         const values = data.table.rows.map(row => 
-          row.c.map(cell => cell ? cell.v : '')
+          row.c.map(cell => (cell ? cell.v : ''))
         );
         
-        console.log('Datos recibidos:', values);
+        console.log('Datos recibidos (sin slice):', values);
         
-        // Obtener la hora y el día actual en Dubai (UTC+4)
-        const now = new Date();
-        const utcNow = new Date(now.getTime() + now.getTimezoneOffset() * 60000);
-        const dubaiNow = new Date(utcNow.getTime() + (4 * 60 * 60000));
-        const today = dubaiNow.getDay();
-        const currentHour = dubaiNow.getHours();
-        const adjustedDay = today === 0 ? 7 : today;
-    
         const tableBody = document.querySelector('#schedule-table tbody');
         tableBody.innerHTML = '';
-        
+
+        // Si no hay datos
         if (!values || values.length === 0) {
           console.error('No values in response:', data);
           tableBody.innerHTML = '<tr><td colspan="9">No schedule data available.</td></tr>';
           return;
         }
-    
-        values.slice(1).forEach((row, index) => {
-          console.log(`Processing row ${index}:`, row); // Añadido para debug
-          if (row && row.length > 0) {
-            const tr = document.createElement('tr');
-    
-            for (let i = 0; i < 9; i++) {
-              const td = document.createElement('td');
-              console.log(`Column ${i}:`, row[i]); // Añadido para debug
+
+        // Asumiendo que la primera fila es encabezado
+        const dataRows = values.slice(1);
+
+        dataRows.forEach((row, rowIndex) => {
+          console.log(`Processing row ${rowIndex}:`, row);
+          // Evitar filas completamente vacías
+          if (!row.some(col => String(col).trim() !== '')) return;
+
+          const tr = document.createElement('tr');
+
+          // Tenemos 9 columnas: 0=DJ, 1..7=días, 8=Total Gigs Week
+          for (let i = 0; i < 9; i++) {
+            const td = document.createElement('td');
+            const cellValue = row[i] ? row[i] : '—';
+
+            if (i === 0) {
+              // Columna DJ: añade botón de calendario
+              const nameContainer = document.createElement('div');
+              nameContainer.style.display = 'flex';
+              nameContainer.style.alignItems = 'center';
+              nameContainer.style.gap = '8px';
               
-              if (i === 0) {
-                const nameContainer = document.createElement('div');
-                nameContainer.style.display = 'flex';
-                nameContainer.style.alignItems = 'center';
-                nameContainer.style.gap = '8px';
-                
-                const nameSpan = document.createElement('span');
-                nameSpan.textContent = row[i];
-                
-                const calendarBtn = document.createElement('button');
-                calendarBtn.className = 'calendar-btn';
-                calendarBtn.innerHTML = '<i class="fas fa-calendar-plus"></i>';
-                calendarBtn.title = 'Add to Calendar';
-                calendarBtn.onclick = () => createCalendarEvents(row);
-                
-                nameContainer.appendChild(nameSpan);
-                nameContainer.appendChild(calendarBtn);
-                td.appendChild(nameContainer);
-              } else {
-                td.textContent = row[i] ? row[i] : '—';
-              }
-    
-              if (i > 0 && i < 8 && row[i]) {
-                const timeMatch = row[i].match(/(\d+)(?::(\d+))?(?:\s*(?:AM|PM|am|pm))?[-\s]+(\d+)(?::(\d+))?(?:\s*(?:AM|PM|am|pm))?/i);
-                
-                if (timeMatch) {
-                  let startHour = parseInt(timeMatch[1]);
-                  let endHour = parseInt(timeMatch[3]);
-                  
-                  if (row[i].toLowerCase().includes('pm')) {
-                    if (startHour < 12) startHour += 12;
-                    if (endHour < 12) endHour += 12;
-                  }
-    
-                  if (i === adjustedDay) {
-                    if (currentHour >= startHour && currentHour < endHour) {
-                      td.classList.add('current-shift');
-                    } else if (currentHour + 1 === startHour) {
-                      td.classList.add('next-shift');
+              const nameSpan = document.createElement('span');
+              nameSpan.textContent = cellValue;
+              
+              const calendarBtn = document.createElement('button');
+              calendarBtn.className = 'calendar-btn';
+              calendarBtn.innerHTML = '<i class="fas fa-calendar-plus"></i>';
+              calendarBtn.title = 'Add to Calendar';
+              calendarBtn.onclick = () => createCalendarEvents(row);
+              
+              nameContainer.appendChild(nameSpan);
+              nameContainer.appendChild(calendarBtn);
+              td.appendChild(nameContainer);
+            } else {
+              td.textContent = cellValue;
+            }
+
+            // Resaltar turnos en columnas 1..7
+            if (i >= 1 && i <= 7 && cellValue !== '—') {
+              const timeMatch = cellValue.match(
+                /(\d+)(?::(\d+))?(?:\s*(AM|PM|am|pm))?\s*-\s*(\d+)(?::(\d+))?(?:\s*(AM|PM|am|pm))?/i
+              );
+              
+              if (timeMatch) {
+                let [ , startH, startM, startAP, endH, endM, endAP ] = timeMatch;
+                startH = parseInt(startH, 10);
+                endH = parseInt(endH, 10);
+                startM = parseInt(startM || '0', 10);
+                endM = parseInt(endM || '0', 10);
+
+                // Convertir a 24h
+                if (startAP && startAP.toLowerCase().includes('p') && startH < 12) startH += 12;
+                if (endAP && endAP.toLowerCase().includes('p') && endH < 12) endH += 12;
+                if (startAP && startAP.toLowerCase().includes('a') && startH === 12) startH = 0;
+                if (endAP && endAP.toLowerCase().includes('a') && endH === 12) endH = 0;
+
+                // Calcular tiempo en minutos desde la medianoche
+                const scheduleStart = startH * 60 + startM;
+                const scheduleEnd = endH * 60 + endM;
+                const now = new Date();
+                const currentTime = now.getHours() * 60 + now.getMinutes();
+
+                // Determinar el día actual (getDay: 0=domingo,1=lunes,...; mapeamos domingo a 7)
+                const currentDay = now.getDay();
+                const dayIndex = (currentDay === 0) ? 7 : currentDay;
+
+                // Clasificación de turno
+                const isMorning = (startH >= 12 && endH <= 18);
+                const isEvening = (startH >= 18 && (endH < 24 || (endH === 23 && endM <= 30)));
+
+                if (i === dayIndex) {
+                  // Solo la columna del día actual se pinta en verde si es el turno actual
+                  if (currentTime >= scheduleStart && currentTime < scheduleEnd) {
+                    td.classList.add('current-shift');
+                  } else {
+                    // No es el turno actual, pero es el día actual: aplica mañana o tarde
+                    if (isMorning) {
+                      td.classList.add('morning-shift');
+                    } else if (isEvening) {
+                      td.classList.add('evening-shift');
                     }
+                  }
+                } else {
+                  // Para las demás columnas, aplica sólo morning/evening
+                  if (isMorning) {
+                    td.classList.add('morning-shift');
+                  } else if (isEvening) {
+                    td.classList.add('evening-shift');
                   }
                 }
               }
-              tr.appendChild(td);
             }
-            tableBody.appendChild(tr);
+            tr.appendChild(td);
           }
+          tableBody.appendChild(tr);
         });
       } catch (error) {
         console.error('Error fetching schedule:', error);
@@ -163,14 +196,11 @@
       }
     }
 
-    // Cambiar el intervalo a 5 minutos
-    // Eliminar el setInterval y dejar solo la carga inicial
-    // setInterval(fetchSchedule, 5 * 60 * 1000);
-    // Reemplazar window.onload por:
+    // Cargar datos al iniciar
     document.addEventListener('DOMContentLoaded', () => {
       fetchSchedule();
       document.getElementById('current-month').textContent = new Date().toLocaleString('en-US', { month: 'long' }).toUpperCase();
-    
+      
       const hamburger = document.querySelector('.hamburger');
       const navMenu = document.querySelector('.nav-menu');
       const venuesToggle = document.querySelector('.venues-toggle');
@@ -179,7 +209,7 @@
         hamburger.classList.toggle('active');
         navMenu.classList.toggle('active');
       });
-    
+      
       venuesToggle.addEventListener('click', (e) => {
         e.preventDefault();
         e.stopPropagation();
@@ -200,11 +230,13 @@
         alert('Schedule link copied to clipboard!');
       }
     });
+
     // Funciones del calendario
     function createCalendarEvents(djSchedule) {
       const djName = djSchedule[0];
       let events = [];
       
+      // Columnas 1..7 son días (Monday..Sunday)
       for (let i = 1; i < 8; i++) {
         if (djSchedule[i]) {
           const venue = djSchedule[i].split(' ')[0];
@@ -220,7 +252,6 @@
           }
         }
       }
-
       generateICSFile(djName, events);
     }
 

@@ -1,7 +1,7 @@
-@import url('https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap');
 /* Base styles */
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
+  font-family: 'Montserrat', sans-serif;
   background-color: #f5f5f7;
   color: #1d1d1f;
   margin: 0;
@@ -103,6 +103,7 @@ h1 {
   font-weight: 600;
   margin-bottom: 2rem;
 }
+
 /* Schedule Table */
 #schedule-container {
   overflow-x: auto;
@@ -143,17 +144,17 @@ td:first-child {
 
 /* Shift styles */
 td.current-shift {
-  background-color: #4CAF50;
-  color: white;
-  font-weight: bold;
-  border: 2px solid #2E7D32;
+  background-color: #4CAF50 !important;
+  color: white !important;
+  font-weight: bold !important;
+  border: 2px solid #2E7D32 !important;
   box-shadow: 0 0 8px rgba(76, 175, 80, 0.4);
 }
 
 td.next-shift {
-  background-color: transparent !important; /* Quitar el fondo naranja */
-  border: none !important; /* Quitar el borde */
-  box-shadow: none !important; /* Quitar el efecto de sombra */
+  background-color: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
 }
 
 /* Empty cells */
@@ -314,29 +315,7 @@ tr:hover td {
   background-color: rgba(76, 175, 80, 0.1);
 }
 
-.current-shift {
-  background-color: rgba(76, 175, 80, 0.4) !important; /* Verde más intenso */
-  font-weight: bold;
-  border: 2px solid #4CAF50 !important;
-}
-
-.next-shift {
-  background-color: rgba(255, 152, 0, 0.3) !important; /* Naranja más visible */
-  border: 1px solid #FF9800 !important;
-}
-
-.current-time {
-  display: none;
-  text-align: center;
-  margin-bottom: 20px;
-  font-size: 1.1em;
-  color: #666;
-}
-
-.current-time i {
-  color: #4CAF50;
-}
-
+/* Override for current shift from JS */
 td.current-shift {
   background-color: #4CAF50 !important;
   color: white !important;
@@ -346,12 +325,12 @@ td.current-shift {
 }
 
 td.next-shift {
-  background-color: transparent !important; /* Quitar el fondo naranja */
-  border: none !important; /* Quitar el borde */
-  box-shadow: none !important; /* Quitar el efecto de sombra */
+  background-color: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
 }
 
-/* Override other table styles */
+/* Override other table styles for current shift */
 tr:hover td.current-shift,
 tr:nth-child(even) td.current-shift,
 td.current-shift {
@@ -359,21 +338,14 @@ td.current-shift {
   color: white !important;
 }
 
-tr:hover td.next-shift,
-tr:nth-child(even) td.next-shift,
-td.next-shift {
-  background-color: transparent !important; /* Quitar el fondo naranja */
-  color: white !important;
-}
-
-/* Schedule Table */
+/* Schedule Table specific */
 td {
   border: 1px solid rgba(0, 102, 204, 0.1) !important;
   padding: 1rem;
   text-align: center;
   background: white;
-  min-width: 100px; /* Asegura un ancho mínimo */
-  height: 30px; /* Asegura una altura mínima */
+  min-width: 100px;
+  height: 30px;
 }
 
 td:empty {
@@ -385,17 +357,10 @@ td:empty {
 
 /* Estilo para el día actual */
 tr.current-day td {
-  background-color: rgba(76, 175, 80, 0.1) !important; /* Verde claro */
+  background-color: rgba(76, 175, 80, 0.1) !important;
 }
 
-/* Estilo para el turno actual */
-td.current-shift {
-  background-color: #4CAF50 !important; /* Verde intenso */
-  color: white !important;
-  font-weight: bold !important;
-  border: 2px solid #2E7D32 !important;
-  box-shadow: 0 0 8px rgba(76, 175, 80, 0.4);
-}
+/* Calendar button */
 .calendar-btn {
   background: none;
   border: none;
@@ -412,4 +377,16 @@ td.current-shift {
 
 .calendar-btn i {
   font-size: 0.9em;
+}
+
+/* Nuevas reglas para turnos */
+/* Estas reglas se aplican cuando el turno no es el actual del día (la celda de ese día se marca en verde si corresponde) */
+td.morning-shift {
+  background-color: #ffeeba; /* Amarillo claro para turno de mañana */
+  color: #1d1d1f;
+}
+
+td.evening-shift {
+  background-color: #cce5ff; /* Azul claro para turno de tarde */
+  color: #1d1d1f;
 }
