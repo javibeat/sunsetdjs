@@ -58,54 +58,35 @@
     </button>
   </div>
 
-  <style>
-      .calendar-btn {
-        background: none;
-        border: none;
-        color: #4a90e2;
-        cursor: pointer;
-        padding: 5px;
-        margin-left: 10px;
-      }
-      .calendar-btn:hover {
-        color: #357abd;
-      }
-    </style>
-
   <script>
     async function fetchSchedule() {
       try {
-        console.log('Fetching schedule...');
-        const response = await fetch('/schedule?_=' + new Date().getTime());  // Cambiado de http://localhost:5001/schedule a /schedule
-        console.log('Response status:', response.status);
+        const response = await fetch('/schedule?_=' + new Date().getTime());
         const data = await response.json();
-        console.log('Data received:', data);
   
         const tableBody = document.querySelector('#schedule-table tbody');
         tableBody.innerHTML = '';
         
+        // Obtener la hora y el día actual en Dubai (UTC+4)
+        const now = new Date();
+        // Crear fecha en UTC
+        const utcNow = new Date(now.getTime() + now.getTimezoneOffset() * 60000);
+        // Convertir a hora de Dubai (UTC+4)
+        const dubaiNow = new Date(utcNow.getTime() + (4 * 60 * 60000));
+        const today = dubaiNow.getDay();
+        const currentHour = dubaiNow.getHours();
+        const currentMinutes = dubaiNow.getMinutes();
+        const adjustedDay = today === 0 ? 7 : today;
+  
+        console.log('Dubai time:', dubaiNow.toLocaleString(), 'Hour:', currentHour, 'Minutes:', currentMinutes, 'Day:', adjustedDay);
+  
         data.data.slice(1).forEach((row) => {
           if (row && row.length > 0) {
             const tr = document.createElement('tr');
   
             for (let i = 0; i < 9; i++) {
               const td = document.createElement('td');
-              
-              if (i === 0) { // Columna del nombre del DJ
-                const nameSpan = document.createElement('span');
-                nameSpan.textContent = row[i];
-                
-                const calendarButton = document.createElement('button');
-                calendarButton.innerHTML = '<i class="fas fa-calendar-plus"></i>';
-                calendarButton.className = 'calendar-btn';
-                calendarButton.title = 'Add to Calendar';
-                calendarButton.onclick = () => createMonthlyCalendarEvents(row);
-                
-                td.appendChild(nameSpan);
-                td.appendChild(calendarButton);
-              } else {
-                td.textContent = row[i] !== undefined ? row[i] : '';
-              }
+              td.textContent = row[i] !== undefined ? row[i] : '';
   
               if (i > 0 && i < 8 && row[i]) {
                 const timeMatch = row[i].match(/(\d+)(?::(\d+))?(?:\s*(?:AM|PM|am|pm))?[-\s]+(\d+)(?::(\d+))?(?:\s*(?:AM|PM|am|pm))?/i);
@@ -139,37 +120,111 @@
       }
     }
 
-    function createMonthlyCalendarEvents(djSchedule) {
+    // Cambiar el intervalo a 5 minutos
+    // Eliminar el setInterval y dejar solo la carga inicial
+    // setInterval(fetchSchedule, 5 * 60 * 1000);
+    window.onload = fetchSchedule;
+    // Eliminar el setInterval y dejar solo la carga inicial
+    // setInterval(fetchSchedule, 5 * 60 * 1000);
+    window.onload = fetchSchedule;
+    document.getElementById('current-month').textContent = new Date().toLocaleString('en-US', { month: 'long' }).toUpperCase();
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const hamburger = document.querySelector('.hamburger');
+      const navMenu = document.querySelector('.nav-menu');
+      const venuesToggle = document.querySelector('.venues-toggle');
+      
+      hamburger.addEventListener('click', () => {
+        hamburger.classList.toggle('active');
+        navMenu.classList.toggle('active');
+      });
+  
+      venuesToggle.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        venuesToggle.parentElement.classList.toggle('submenu-active');
+      });
+    });
+
+    document.getElementById('shareButton').addEventListener('click', async () => {
+      try {
+        const url = window.location.href;
+        await navigator.share({
+          title: 'DJ Schedule',
+          text: `Check out the complete DJ schedule - ${document.getElementById('current-month').textContent}`,
+          url: url
+        });
+      } catch (err) {
+        navigator.clipboard.writeText(window.location.href);
+        alert('Schedule link copied to clipboard!');
+      }
+    });
+    // Funciones del calendario
+    function createCalendarEvents(djSchedule) {
       const djName = djSchedule[0];
       let events = [];
-      const currentDate = new Date();
-      const currentMonth = currentDate.getMonth();
-      const currentYear = currentDate.getFullYear();
       
-      // Obtener el último día del mes actual
-      const lastDay = new Date(currentYear, currentMonth + 1, 0).getDate();
-      
-      // Crear eventos para cada semana del mes
-      for (let day = 1; day <= lastDay; day++) {
-        const date = new Date(currentYear, currentMonth, day);
-        const dayOfWeek = date.getDay() || 7; // Convertir domingo (0) a 7
-        
-        if (djSchedule[dayOfWeek]) {
-          const venue = djSchedule[dayOfWeek].split(' ')[0];
-          const timeRange = djSchedule[dayOfWeek].match(/(\d+(?::\d+)?(?:\s*(?:AM|PM))?)\s*-\s*(\d+(?::\d+)?(?:\s*(?:AM|PM))?)/i);
+      for (let i = 1; i < 8; i++) {
+        if (djSchedule[i]) {
+          const venue = djSchedule[i].split(' ')[0];
+          const timeRange = djSchedule[i].match(/(\d+(?::\d+)?(?:\s*(?:AM|PM))?)\s*-\s*(\d+(?::\d+)?(?:\s*(?:AM|PM))?)/i);
           
           if (timeRange) {
             events.push({
               venue,
               startTime: timeRange[1],
               endTime: timeRange[2],
-              date: new Date(date)
+              dayIndex: i
             });
           }
         }
       }
 
       generateICSFile(djName, events);
+    }
+
+    function generateICSFile(djName, events) {
+      let icsContent = [
+        'BEGIN:VCALENDAR',
+        'VERSION:2.0',
+        'PRODID:-//DJ Schedule//EN'
+      ];
+
+      events.forEach(event => {
+        const date = getNextDate(event.dayIndex);
+        icsContent = icsContent.concat([
+          'BEGIN:VEVENT',
+          `SUMMARY:${djName} at ${event.venue}`,
+          `DTSTART:${formatICSDate(date, event.startTime)}`,
+          `DTEND:${formatICSDate(date, event.endTime)}`,
+          `LOCATION:${event.venue} Dubai`,
+          'END:VEVENT'
+        ]);
+      });
+
+      icsContent.push('END:VCALENDAR');
+      downloadICSFile(djName, icsContent.join('\n'));
+    }
+
+    function downloadICSFile(djName, content) {
+      const blob = new Blob([content], { type: 'text/calendar' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${djName}_Schedule.ics`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    }
+
+    function getNextDate(dayIndex) {
+      const today = new Date();
+      const currentDay = today.getDay() || 7;
+      const daysUntilNext = (dayIndex - currentDay + 7) % 7;
+      const nextDate = new Date(today);
+      nextDate.setDate(today.getDate() + daysUntilNext);
+      return nextDate;
     }
 
     function formatICSDate(date, timeStr) {
@@ -180,27 +235,8 @@
       if (period && period.toLowerCase() === 'pm' && hours < 12) hours += 12;
       if (period && period.toLowerCase() === 'am' && hours === 12) hours = 0;
 
-      const localDate = new Date(date);
-      localDate.setHours(hours, parseInt(minutes));
-      
-      // Convertir a UTC
-      const utcDate = new Date(localDate.getTime() - (4 * 60 * 60000)); // Ajuste para Dubai (UTC+4)
-      
-      return utcDate.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+      return `${date.getFullYear()}${String(date.getMonth() + 1).padStart(2, '0')}${String(date.getDate()).padStart(2, '0')}T${String(hours).padStart(2, '0')}${minutes}00Z`;
     }
-    
-    // Añadir estas variables al inicio del script
-        const now = new Date();
-        const utcNow = new Date(now.getTime() + now.getTimezoneOffset() * 60000);
-        const dubaiNow = new Date(utcNow.getTime() + (4 * 60 * 60000));
-        const today = dubaiNow.getDay();
-        const currentHour = dubaiNow.getHours();
-        const adjustedDay = today === 0 ? 7 : today;
-    // Añadir al final del script
-        window.onload = () => {
-          fetchSchedule();
-          document.getElementById('current-month').textContent = new Date().toLocaleString('en-US', { month: 'long' }).toUpperCase();
-        };
   </script>
 </body>
 </html>
