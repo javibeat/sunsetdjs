@@ -1,0 +1,415 @@
+@import url('https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@400;500;600&display=swap');
+/* Base styles */
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
+  background-color: #f5f5f7;
+  color: #1d1d1f;
+  margin: 0;
+  padding: 70px 0 0 0;
+  min-height: 100vh;
+}
+
+/* Navigation */
+.navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 70px;
+  background-color: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: none;
+  box-shadow: 0 1px 3px rgba(0, 102, 204, 0.1);
+  z-index: 1000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Añadir estos estilos justo después de los estilos base de navegación */
+.venues-submenu {
+  display: none;
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: rgba(255, 255, 255, 0.98);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: 12px;
+  box-shadow: 0 4px 24px rgba(0, 102, 204, 0.1);
+  min-width: 200px;
+  list-style: none;
+  padding: 0.5rem;
+  margin: 0;
+}
+
+.venues-item {
+  position: relative;
+  cursor: pointer;
+}
+
+.venues-submenu li {
+  list-style: none;
+  padding: 0.5rem 0;
+}
+
+.venues-item.submenu-active .venues-submenu {
+  display: block;
+}
+
+.venues-submenu .nav-link {
+  padding: 0.5rem 1rem;
+  display: block;
+  text-align: center;
+}
+
+.nav-menu {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  gap: 2rem;
+}
+
+.nav-link {
+  color: #1d1d1f;
+  text-decoration: none;
+  padding: 1rem 2rem;
+  text-transform: uppercase;
+  font-weight: 500;
+  letter-spacing: 1px;
+  transition: color 0.3s ease;
+}
+
+.nav-link:hover {
+  color: #0066cc;
+}
+
+/* Container */
+.container {
+  width: 90%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+h1 {
+  text-align: center;
+  color: #1d1d1f;
+  font-weight: 600;
+  margin-bottom: 2rem;
+}
+/* Schedule Table */
+#schedule-container {
+  overflow-x: auto;
+  margin: 2rem 0;
+  border-radius: 18px;
+  background: white;
+  box-shadow: 0 4px 24px rgba(0, 102, 204, 0.08);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+}
+
+/* Unified cell styles */
+th, td {
+  padding: 1rem;
+  text-align: center;
+  border: 1px solid rgba(0, 102, 204, 0.1);
+  min-width: 100px;
+  background: white;
+  color: #0066cc;
+  font-weight: 500;
+}
+
+th {
+  background: #0066cc;
+  color: white;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-size: 0.9rem;
+}
+
+td:first-child {
+  background: rgba(0, 102, 204, 0.05);
+}
+
+/* Shift styles */
+td.current-shift {
+  background-color: #4CAF50;
+  color: white;
+  font-weight: bold;
+  border: 2px solid #2E7D32;
+  box-shadow: 0 0 8px rgba(76, 175, 80, 0.4);
+}
+
+td.next-shift {
+  background-color: transparent !important; /* Quitar el fondo naranja */
+  border: none !important; /* Quitar el borde */
+  box-shadow: none !important; /* Quitar el efecto de sombra */
+}
+
+/* Empty cells */
+td:empty {
+  border: 1px solid rgba(0, 102, 204, 0.1);
+  background: white;
+  min-width: 100px;
+  height: 30px;
+}
+
+/* Venues section */
+tr.venues-row th {
+  background: rgba(0, 102, 204, 0.7);
+  color: white;
+}
+
+/* Content cells */
+td {
+  color: #1d1d1f;
+}
+
+td:not(:empty) {
+  color: #0066cc;
+  font-weight: 500;
+}
+
+/* First column */
+td:first-child {
+  background: rgba(0, 102, 204, 0.05);
+  color: #0066cc;
+  font-weight: 500;
+}
+
+/* Alternating rows */
+tr:nth-child(even) td {
+  background: rgba(0, 102, 204, 0.02);
+}
+
+/* Hover effect */
+tr:hover td {
+  background: rgba(0, 102, 204, 0.05);
+  transition: background 0.3s ease;
+}
+
+/* Mobile adjustments */
+@media (max-width: 768px) {
+  body {
+    padding-top: 80px;
+  }
+
+  .container {
+    padding: 1rem;
+  }
+
+  table {
+    font-size: 0.9rem;
+  }
+
+  th, td {
+    padding: 0.8rem;
+  }
+
+  /* Hamburger menu */
+  .hamburger {
+    display: block;
+    position: fixed;
+    top: 1.5rem;
+    right: 1.5rem;
+    z-index: 1001;
+    cursor: pointer;
+  }
+  
+  .bar {
+    display: block;
+    width: 25px;
+    height: 2px;
+    margin: 5px auto;
+    background-color: #0066cc;
+    transition: all 0.3s ease-in-out;
+  }
+
+  .hamburger.active .bar:nth-child(2) {
+    opacity: 0;
+  }
+
+  .hamburger.active .bar:nth-child(1) {
+    transform: translateY(8px) rotate(45deg);
+  }
+
+  .hamburger.active .bar:nth-child(3) {
+    transform: translateY(-8px) rotate(-45deg);
+  }
+
+  .nav-menu {
+    position: fixed;
+    left: -100%;
+    top: 0;
+    flex-direction: column;
+    background-color: rgba(255, 255, 255, 0.98);
+    backdrop-filter: blur(20px);
+    width: 100%;
+    height: 100vh;
+    transition: 0.3s;
+    justify-content: center;
+    align-items: center;
+    gap: 2rem;
+  }
+
+  .nav-menu.active {
+    left: 0;
+    background: rgba(255, 255, 255, 0.98);
+    backdrop-filter: blur(20px);
+  }
+
+  .venues-submenu {
+    position: relative;
+    width: 100%;
+    text-align: center;
+    background: rgba(0, 102, 204, 0.02);
+    border-radius: 0;
+    top: 0;
+    left: 0;
+    transform: none;
+    box-shadow: none;
+    margin-top: 0.5rem;
+  }
+
+  .venues-item {
+    width: 100%;
+    text-align: center;
+  }
+}
+
+.share-container {
+  display: flex;
+  justify-content: center;
+  margin: 20px 0;
+}
+
+.share-button {
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 16px;
+}
+
+.share-button:hover {
+  background-color: #45a049;
+}
+
+.current-day {
+  background-color: rgba(76, 175, 80, 0.1);
+}
+
+.current-shift {
+  background-color: rgba(76, 175, 80, 0.4) !important; /* Verde más intenso */
+  font-weight: bold;
+  border: 2px solid #4CAF50 !important;
+}
+
+.next-shift {
+  background-color: rgba(255, 152, 0, 0.3) !important; /* Naranja más visible */
+  border: 1px solid #FF9800 !important;
+}
+
+.current-time {
+  display: none;
+  text-align: center;
+  margin-bottom: 20px;
+  font-size: 1.1em;
+  color: #666;
+}
+
+.current-time i {
+  color: #4CAF50;
+}
+
+td.current-shift {
+  background-color: #4CAF50 !important;
+  color: white !important;
+  font-weight: bold !important;
+  border: 2px solid #2E7D32 !important;
+  box-shadow: 0 0 8px rgba(76, 175, 80, 0.4);
+}
+
+td.next-shift {
+  background-color: transparent !important; /* Quitar el fondo naranja */
+  border: none !important; /* Quitar el borde */
+  box-shadow: none !important; /* Quitar el efecto de sombra */
+}
+
+/* Override other table styles */
+tr:hover td.current-shift,
+tr:nth-child(even) td.current-shift,
+td.current-shift {
+  background-color: #4CAF50 !important;
+  color: white !important;
+}
+
+tr:hover td.next-shift,
+tr:nth-child(even) td.next-shift,
+td.next-shift {
+  background-color: transparent !important; /* Quitar el fondo naranja */
+  color: white !important;
+}
+
+/* Schedule Table */
+td {
+  border: 1px solid rgba(0, 102, 204, 0.1) !important;
+  padding: 1rem;
+  text-align: center;
+  background: white;
+  min-width: 100px; /* Asegura un ancho mínimo */
+  height: 30px; /* Asegura una altura mínima */
+}
+
+td:empty {
+  border: 1px solid rgba(0, 102, 204, 0.1) !important;
+  background: white;
+  min-width: 100px;
+  height: 30px;
+}
+
+/* Estilo para el día actual */
+tr.current-day td {
+  background-color: rgba(76, 175, 80, 0.1) !important; /* Verde claro */
+}
+
+/* Estilo para el turno actual */
+td.current-shift {
+  background-color: #4CAF50 !important; /* Verde intenso */
+  color: white !important;
+  font-weight: bold !important;
+  border: 2px solid #2E7D32 !important;
+  box-shadow: 0 0 8px rgba(76, 175, 80, 0.4);
+}
+.calendar-btn {
+  background: none;
+  border: none;
+  color: #4a90e2;
+  cursor: pointer;
+  padding: 4px;
+  margin-left: 8px;
+  transition: color 0.3s ease;
+}
+
+.calendar-btn:hover {
+  color: #357abd;
+}
+
+.calendar-btn i {
+  font-size: 0.9em;
+}
