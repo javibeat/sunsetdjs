@@ -86,7 +86,28 @@
   
             for (let i = 0; i < 9; i++) {
               const td = document.createElement('td');
-              td.textContent = row[i] !== undefined ? row[i] : '';
+              
+              if (i === 0) { // Primera columna (nombre del DJ)
+                const nameContainer = document.createElement('div');
+                nameContainer.style.display = 'flex';
+                nameContainer.style.alignItems = 'center';
+                nameContainer.style.gap = '8px';
+                
+                const nameSpan = document.createElement('span');
+                nameSpan.textContent = row[i];
+                
+                const calendarBtn = document.createElement('button');
+                calendarBtn.className = 'calendar-btn';
+                calendarBtn.innerHTML = '<i class="fas fa-calendar-plus"></i>';
+                calendarBtn.title = 'Add to Calendar';
+                calendarBtn.onclick = () => createCalendarEvents(row);
+                
+                nameContainer.appendChild(nameSpan);
+                nameContainer.appendChild(calendarBtn);
+                td.appendChild(nameContainer);
+              } else {
+                td.textContent = row[i] !== undefined ? row[i] : '';
+              }
   
               if (i > 0 && i < 8 && row[i]) {
                 const timeMatch = row[i].match(/(\d+)(?::(\d+))?(?:\s*(?:AM|PM|am|pm))?[-\s]+(\d+)(?::(\d+))?(?:\s*(?:AM|PM|am|pm))?/i);
