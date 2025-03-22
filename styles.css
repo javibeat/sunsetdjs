@@ -142,7 +142,7 @@ td:first-child {
   background: rgba(0, 102, 204, 0.05);
 }
 
-/* Shift styles */
+/* Shift styles - Consolidado en una sola definición */
 td.current-shift {
   background-color: #4CAF50 !important;
   color: white !important;
@@ -332,8 +332,7 @@ td.next-shift {
 
 /* Override other table styles for current shift */
 tr:hover td.current-shift,
-tr:nth-child(even) td.current-shift,
-td.current-shift {
+tr:nth-child(even) td.current-shift {
   background-color: #4CAF50 !important;
   color: white !important;
 }

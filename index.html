@@ -75,7 +75,7 @@
         const jsonText = text.substring(47).slice(0, -2);
         const data = JSON.parse(jsonText);
         
-        // Transform the data to match our expected format
+        // Transformar la data a arrays
         const values = data.table.rows.map(row => 
           row.c.map(cell => (cell ? cell.v : ''))
         );
@@ -85,127 +85,101 @@
         const tableBody = document.querySelector('#schedule-table tbody');
         tableBody.innerHTML = '';
 
-        // Si no hay datos
         if (!values || values.length === 0) {
           console.error('No values in response:', data);
           tableBody.innerHTML = '<tr><td colspan="9">No schedule data available.</td></tr>';
           return;
         }
 
-        // Asumiendo que la primera fila es encabezado
+        // Asumiendo que la primera fila es el encabezado
         const dataRows = values.slice(1);
 
         dataRows.forEach((row, rowIndex) => {
           console.log(`Processing row ${rowIndex}:`, row);
-          // Evitar filas completamente vacías
           if (!row.some(col => String(col).trim() !== '')) return;
-
           const tr = document.createElement('tr');
-
-          // Tenemos 9 columnas: 0=DJ, 1..7=días, 8=Total Gigs Week
+          // Iteramos 9 columnas: 0=DJ, 1..7=días, 8=Total Gigs Week
           for (let i = 0; i < 9; i++) {
             const td = document.createElement('td');
             const cellValue = row[i] ? row[i] : '—';
-
+            
             if (i === 0) {
+              // Columna DJ: añade botón de calendario solo si hay DJ
               if (cellValue !== '—') {
-                // Columna DJ: añade botón de calendario solo si hay un DJ
                 const nameContainer = document.createElement('div');
                 nameContainer.style.display = 'flex';
                 nameContainer.style.alignItems = 'center';
                 nameContainer.style.gap = '8px';
-                
                 const nameSpan = document.createElement('span');
                 nameSpan.textContent = cellValue;
-                
                 const calendarBtn = document.createElement('button');
                 calendarBtn.className = 'calendar-btn';
                 calendarBtn.innerHTML = '<i class="fas fa-calendar-plus"></i>';
                 calendarBtn.title = 'Add to Calendar';
                 calendarBtn.onclick = () => createCalendarEvents(row);
-                
                 nameContainer.appendChild(nameSpan);
                 nameContainer.appendChild(calendarBtn);
                 td.appendChild(nameContainer);
               } else {
-                // Si no hay DJ, muestra simplemente un guion
                 td.textContent = '—';
               }
             } else {
               td.textContent = cellValue;
             }
-
-            // Resaltar turnos en columnas 1..7
+            
+            // Clasificar turnos solo en las columnas de los días (1 a 7)
             if (i >= 1 && i <= 7 && cellValue !== '—') {
               const timeMatch = cellValue.match(
-                /(\d+)(?::(\d+))?(?:\s*(AM|PM|am|pm))?\s*-\s*(\d+)(?::(\d+))?(?:\s*(AM|PM|am|pm))?/i
+                /(\d+)(?::(\d+))?\s*-\s*(\d+)(?::(\d+))?/i
               );
-              
               if (timeMatch) {
-                let [ , startH, startM, startAP, endH, endM, endAP ] = timeMatch;
+                let [ , startH, startM, endH, endM ] = timeMatch;
                 startH = parseInt(startH, 10);
                 endH = parseInt(endH, 10);
                 startM = parseInt(startM || '0', 10);
                 endM = parseInt(endM || '0', 10);
-
-                // Convertir a 24h
-                if (startAP && startAP.toLowerCase().includes('p') && startH < 12) startH += 12;
-                if (endAP && endAP.toLowerCase().includes('p') && endH < 12) endH += 12;
-                if (startAP && startAP.toLowerCase().includes('a') && startH === 12) startH = 0;
-                if (endAP && endAP.toLowerCase().includes('a') && endH === 12) endH = 0;
-
-                // Calcular tiempo en minutos desde la medianoche
+                
+                // Asumiendo que todos son PM
+                if (startH < 12) startH += 12;
+                if (endH < 12) endH += 12;
+                
                 const scheduleStart = startH * 60 + startM;
                 const scheduleEnd = endH * 60 + endM;
                 const now = new Date();
                 const currentTime = now.getHours() * 60 + now.getMinutes();
-
-                // Determinar el día actual (getDay: 0=domingo,1=lunes,...; mapeamos domingo a 7)
                 const currentDay = now.getDay();
                 const dayIndex = (currentDay === 0) ? 7 : currentDay;
-
-                // Clasificación de turno
-                const isMorning = (startH >= 12 && endH <= 18);
-                const isEvening = (startH >= 18 && (endH < 24 || (endH === 23 && endM <= 30)));
-
-                if (i === dayIndex) {
-                  // Solo la columna del día actual se pinta en verde si es el turno actual
-                  if (currentTime >= scheduleStart && currentTime < scheduleEnd) {
-                    td.classList.add('current-shift');
-                  } else {
-                    // No es el turno actual, pero es el día actual: aplica mañana o tarde
-                    if (isMorning) {
-                      td.classList.add('morning-shift');
-                    } else if (isEvening) {
-                      td.classList.add('evening-shift');
-                    }
-                  }
-                } else {
-                  // Para las demás columnas, aplica sólo morning/evening
-                  if (isMorning) {
-                    td.classList.add('morning-shift');
-                  } else if (isEvening) {
-                    td.classList.add('evening-shift');
-                  }
+                
+                // Añadir logs para depuración
+                console.log(`Celda: ${cellValue}, Día: ${i}, Día actual: ${dayIndex}`);
+                console.log(`Hora actual: ${now.getHours()}:${now.getMinutes()} (${currentTime} minutos)`);
+                console.log(`Rango del turno: ${startH}:${startM}-${endH}:${endM} (${scheduleStart}-${scheduleEnd} minutos)`);
+                
+                if (i === dayIndex && currentTime >= scheduleStart && currentTime < scheduleEnd) {
+                  // Solo la columna del día actual se resalta en verde si la hora actual cae en el rango
+                  td.classList.add('current-shift');
+                  console.log(`¡TURNO ACTUAL ENCONTRADO! ${cellValue}`);
                 }
               }
             }
+            
             tr.appendChild(td);
           }
           tableBody.appendChild(tr);
         });
       } catch (error) {
         console.error('Error fetching schedule:', error);
-        const tableBody = document.querySelector('#schedule-table tbody');
-        tableBody.innerHTML = '<tr><td colspan="9">Failed to load schedule. Please try again later.</td></tr>';
+        document.querySelector('#schedule-table tbody').innerHTML =
+          '<tr><td colspan="9">Failed to load schedule. Please try again later.</td></tr>';
       }
     }
 
-    // Cargar datos al iniciar
     document.addEventListener('DOMContentLoaded', () => {
       fetchSchedule();
-      document.getElementById('current-month').textContent = new Date().toLocaleString('en-US', { month: 'long' }).toUpperCase();
-      
+      document.getElementById('current-month').textContent = new Date()
+        .toLocaleString('en-US', { month: 'long' })
+        .toUpperCase();
+
       const hamburger = document.querySelector('.hamburger');
       const navMenu = document.querySelector('.nav-menu');
       const venuesToggle = document.querySelector('.venues-toggle');
@@ -240,13 +214,10 @@
     function createCalendarEvents(djSchedule) {
       const djName = djSchedule[0];
       let events = [];
-      
-      // Columnas 1..7 son días (Monday..Sunday)
       for (let i = 1; i < 8; i++) {
         if (djSchedule[i]) {
           const venue = djSchedule[i].split(' ')[0];
           const timeRange = djSchedule[i].match(/(\d+(?::\d+)?(?:\s*(?:AM|PM))?)\s*-\s*(\d+(?::\d+)?(?:\s*(?:AM|PM))?)/i);
-          
           if (timeRange) {
             events.push({
               venue,
@@ -308,10 +279,8 @@
       const [time, period] = timeStr.split(/\s+(AM|PM)/i);
       let [hours, minutes = '00'] = time.split(':');
       hours = parseInt(hours);
-      
       if (period && period.toLowerCase() === 'pm' && hours < 12) hours += 12;
       if (period && period.toLowerCase() === 'am' && hours === 12) hours = 0;
-
       return `${date.getFullYear()}${String(date.getMonth() + 1).padStart(2, '0')}${String(date.getDate()).padStart(2, '0')}T${String(hours).padStart(2, '0')}${minutes}00Z`;
     }
   </script>
