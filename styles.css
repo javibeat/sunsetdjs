@@ -390,3 +390,84 @@ td.evening-shift {
   background-color: #cce5ff; /* Azul claro para turno de tarde */
   color: #1d1d1f;
 }
+
+/* Estilos para la leyenda de eventos especiales */
+.events-legend {
+  margin-top: 30px;
+  padding: 15px;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.events-legend h3 {
+  margin-top: 0;
+  color: #333;
+  border-bottom: 1px solid #ddd;
+  padding-bottom: 10px;
+  margin-bottom: 15px;
+}
+
+.special-event {
+  display: flex;
+  margin-bottom: 15px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid #eee;
+}
+
+.special-event:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.event-date {
+  min-width: 150px;
+  font-weight: bold;
+  color: #555;
+  text-transform: capitalize;
+}
+
+.event-details {
+  flex: 1;
+}
+
+.event-details p {
+  margin: 5px 0 0;
+  color: #666;
+}
+
+/* Estilo para celdas con eventos especiales */
+.special-event-cell {
+  position: relative;
+  background-color: rgba(255, 0, 0, 0.2) !important;
+  font-weight: bold;
+  color: #e74c3c !important;
+  border: 2px solid #e74c3c !important;
+}
+
+.event-cell-indicator {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  width: 10px;
+  height: 10px;
+  background-color: #e74c3c;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+/* Asegurarse de que las celdas de eventos especiales no se vean afectadas por otros estilos */
+tr:hover td.special-event-cell,
+tr:nth-child(even) td.special-event-cell,
+td.special-event-cell.current-shift {
+  background-color: rgba(255, 0, 0, 0.2) !important;
+  color: #e74c3c !important;
+  border: 2px solid #e74c3c !important;
+}
+
+/* Reemplazar la estrella con un indicador más claro */
+.special-event-cell::after {
+  content: "";
+  display: none;
+}
