@@ -98,40 +98,35 @@
 
             if (i >= 1 && i <= 7 && cellValue !== '—') {
               const timeMatch = cellValue.match(
-                /(\d+)(?::(\d+))?(?:\s*(AM|PM))?\s*-\s*(\d+)(?::(\d+))?(?:\s*(AM|PM))?/i
+                /(\d+)(?::(\d+))?\s*-\s*(\d+)(?::(\d+))?/i
               );
               if (timeMatch) {
-                let [ , startH, startM, startAP, endH, endM, endAP ] = timeMatch;
-                startH = parseInt(startH || '0', 10);
-                endH = parseInt(endH || '0', 10);
+                let [ , startH, startM, endH, endM ] = timeMatch;
+                startH = parseInt(startH, 10);
+                endH = parseInt(endH, 10);
                 startM = parseInt(startM || '0', 10);
                 endM = parseInt(endM || '0', 10);
-
-                if (startAP && startAP.toLowerCase().includes('p') && startH < 12) startH += 12;
-                if (endAP && endAP.toLowerCase().includes('p') && endH < 12) endH += 12;
-                if (startAP && startAP.toLowerCase().includes('a') && startH === 12) startH = 0;
-                if (endAP && endAP.toLowerCase().includes('a') && endH === 12) endH = 0;
-
+                
+                // Asumiendo que todos son PM
+                if (startH < 12) startH += 12;
+                if (endH < 12) endH += 12;
+                
                 const scheduleStart = startH * 60 + startM;
                 const scheduleEnd = endH * 60 + endM;
                 const now = new Date();
                 const currentTime = now.getHours() * 60 + now.getMinutes();
-                const currentDay = now.getDay() || 7;
+                const currentDay = now.getDay();
                 const dayIndex = (currentDay === 0) ? 7 : currentDay;
-
-                const isMorning = (startH >= 12 && endH <= 18);
-                const isEvening = (startH >= 18 && (endH < 24 || (endH === 23 && endM <= 30)));
-
-                if (i === dayIndex) {
-                  if (currentTime >= scheduleStart && currentTime < scheduleEnd) {
-                    td.classList.add('current-shift');
-                  } else {
-                    if (isMorning) td.classList.add('morning-shift');
-                    else if (isEvening) td.classList.add('evening-shift');
-                  }
-                } else {
-                  if (isMorning) td.classList.add('morning-shift');
-                  else if (isEvening) td.classList.add('evening-shift');
+                
+                // Añadir logs para depuración
+                console.log(`Celda: ${cellValue}, Día: ${i}, Día actual: ${dayIndex}`);
+                console.log(`Hora actual: ${now.getHours()}:${now.getMinutes()} (${currentTime} minutos)`);
+                console.log(`Rango del turno: ${startH}:${startM}-${endH}:${endM} (${scheduleStart}-${scheduleEnd} minutos)`);
+                
+                if (i === dayIndex && currentTime >= scheduleStart && currentTime < scheduleEnd) {
+                  // Solo la columna del día actual se resalta en verde si la hora actual cae en el rango
+                  td.classList.add('current-shift');
+                  console.log(`¡TURNO ACTUAL ENCONTRADO! ${cellValue}`);
                 }
               }
             }
