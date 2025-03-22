@@ -143,9 +143,11 @@
 
     document.addEventListener('DOMContentLoaded', () => {
       fetchSchedule();
-      document.getElementById('current-month').textContent = new Date()
-        .toLocaleString('en-US', { month: 'long' })
-        .toUpperCase();
+      
+      // Corregir el error: current-month no existe en ammos.html
+      // document.getElementById('current-month').textContent = new Date()
+      //   .toLocaleString('en-US', { month: 'long' })
+      //   .toUpperCase();
 
       const hamburger = document.querySelector('.hamburger');
       const navMenu = document.querySelector('.nav-menu');
@@ -156,19 +158,40 @@
         navMenu.classList.toggle('active');
       });
 
+      // Mejorar la funcionalidad del menú desplegable
       venuesToggle.addEventListener('click', (e) => {
         e.preventDefault();
         e.stopPropagation();
-        venuesToggle.parentElement.classList.toggle('submenu-active');
+        console.log('Toggle clicked, adding submenu-active class');
+        const venuesItem = document.querySelector('.venues-item');
+        venuesItem.classList.toggle('submenu-active');
+        console.log('submenu-active class applied:', venuesItem.classList.contains('submenu-active'));
+      });
+      
+      // Cerrar el submenú cuando se hace clic fuera de él
+      document.addEventListener('click', (e) => {
+        const venuesItem = document.querySelector('.venues-item');
+        if (venuesItem && !venuesItem.contains(e.target)) {
+          venuesItem.classList.remove('submenu-active');
+        }
+      });
+      
+      // Cerrar el menú hamburguesa cuando se hace clic en un enlace, excepto en VENUES
+      document.querySelectorAll('.nav-link:not(.venues-toggle)').forEach(link => {
+        link.addEventListener('click', () => {
+          hamburger.classList.remove('active');
+          navMenu.classList.remove('active');
+        });
       });
     });
 
     document.getElementById('shareButton').addEventListener('click', async () => {
       try {
         const url = window.location.href;
+        const currentMonth = new Date().toLocaleString('en-US', { month: 'long' }).toUpperCase();
         await navigator.share({
           title: 'AMMOS DJ Schedule',
-          text: `Check out the DJ schedule for AMMOS - ${document.getElementById('current-month').textContent}`,
+          text: `Check out the DJ schedule for AMMOS - ${currentMonth}`,
           url: url
         });
       } catch (err) {

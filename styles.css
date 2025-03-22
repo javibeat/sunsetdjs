@@ -260,7 +260,7 @@ tr:hover td {
     transition: 0.3s;
     justify-content: center;
     align-items: center;
-    gap: 2rem;
+    gap: 0.5rem; /* Reducido de 2rem a 0.5rem para acercar HOME y VENUES */
   }
 
   .nav-menu.active {
@@ -269,22 +269,84 @@ tr:hover td {
     backdrop-filter: blur(20px);
   }
 
+  /* Corregir estilos del submenú en móvil */
   .venues-submenu {
-    position: relative;
+    position: static;
     width: 100%;
     text-align: center;
-    background: rgba(0, 102, 204, 0.02);
+    background-color: transparent;
     border-radius: 0;
-    top: 0;
-    left: 0;
-    transform: none;
     box-shadow: none;
-    margin-top: 0.5rem;
+    margin: 0;
+    padding: 0;
+    transform: none;
+    left: auto;
+    top: auto;
+    display: none;
   }
 
+  .venues-item.submenu-active .venues-submenu {
+    display: block;
+  }
+  
+  .venues-submenu li {
+    margin: 0;
+    width: 100%;
+    text-align: center;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+  }
+  
+  .venues-submenu a {
+    color: #1d1d1f;
+    padding: 1rem 0;
+    display: block;
+    width: auto;
+    text-align: center;
+    font-size: 1.1em;
+    font-weight: 500;
+  }
+  
+  .venues-submenu a:hover {
+    color: #0066cc;
+    background-color: transparent;
+  }
+  
+  /* Asegurar que el toggle esté centrado */
+  .venues-toggle {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    padding: 1rem 0;
+    margin: 0 auto;
+    text-align: center;
+  }
+  
+  /* Eliminar estilos que puedan estar causando conflictos */
   .venues-item {
     width: 100%;
     text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  /* Asegurar que todos los elementos del menú estén centrados */
+  .nav-menu li {
+    width: 100%;
+    text-align: center;
+    display: flex;
+    justify-content: center;
+  }
+  
+  .nav-link {
+    width: auto;
+    text-align: center;
+    padding: 1rem 0;
+    font-size: 1.3rem; /* Aumentado el tamaño de fuente en móvil */
+    font-weight: 500;
   }
 }
 
@@ -470,4 +532,68 @@ td.special-event-cell.current-shift {
 .special-event-cell::after {
   content: "";
   display: none;
+}
+
+/* Añade estos estilos para el menú desplegable */
+.venues-item {
+  position: relative;
+}
+
+.venues-toggle {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+}
+
+.venues-toggle i {
+  margin-left: 5px;
+  transition: transform 0.3s ease;
+}
+
+.venues-submenu {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background-color: rgba(255, 255, 255, 0.98);
+  min-width: 150px;
+  box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+  z-index: 1;
+  padding: 10px 0;
+}
+
+.submenu-active .venues-submenu {
+  display: block;
+}
+
+.submenu-active .venues-toggle i {
+  transform: rotate(180deg);
+}
+
+.venues-submenu li {
+  display: block;
+  width: 100%;
+}
+
+.venues-submenu a {
+  padding: 10px 15px;
+  display: block;
+  color: #1d1d1f;
+  text-decoration: none;
+}
+
+.venues-submenu a:hover {
+  background-color: rgba(0, 102, 204, 0.1);
+}
+
+/* Eliminar estos estilos duplicados que causan conflictos */
+/* Ajustes para móvil */
+@media (max-width: 768px) {
+  /* Eliminar esta regla duplicada que causa conflictos */
+  /*.venues-submenu {
+    position: static;
+    box-shadow: none;
+    padding-left: 20px;
+    background-color: transparent;
+  }*/
 }

@@ -31,7 +31,7 @@
   </nav>
 
   <div class="container">
-    <h1>DJ Schedule APRIL</h1>
+    <h1>DJ Schedule <span id="current-month">APRIL</span></h1>
     <div id="schedule-container">
       <table id="schedule-table">
         <thead>
@@ -129,46 +129,48 @@
             
             // Clasificar turnos solo en las columnas de los días (1 a 7)
             if (i >= 1 && i <= 7 && cellValue !== '—') {
-              // Verificar primero si es una celda de evento especial
+              // Verificar si es una celda con horario (contiene un guión entre horas)
+              const timeMatch = cellValue.match(
+                /(\d+)(?::(\d+))?\s*-\s*(\d+)(?::(\d+))?/i
+              );
+              
+              if (timeMatch) {
+                let [ , startH, startM, endH, endM ] = timeMatch;
+                startH = parseInt(startH, 10);
+                endH = parseInt(endH, 10);
+                startM = parseInt(startM || '0', 10);
+                endM = parseInt(endM || '0', 10);
+                
+                // Asumiendo que todos son PM
+                if (startH < 12) startH += 12;
+                if (endH < 12) endH += 12;
+                
+                const scheduleStart = startH * 60 + startM;
+                const scheduleEnd = endH * 60 + endM;
+                const now = new Date();
+                const currentTime = now.getHours() * 60 + now.getMinutes();
+                const currentDay = now.getDay();
+                const dayIndex = (currentDay === 0) ? 7 : currentDay;
+                
+                // Añadir logs para depuración
+                console.log(`Celda: ${cellValue}, Día: ${i}, Día actual: ${dayIndex}`);
+                console.log(`Hora actual: ${now.getHours()}:${now.getMinutes()} (${currentTime} minutos)`);
+                console.log(`Rango del turno: ${startH}:${startM}-${endH}:${endM} (${scheduleStart}-${scheduleEnd} minutos)`);
+                
+                // Verificar si es el turno actual
+                if (i === dayIndex && currentTime >= scheduleStart && currentTime < scheduleEnd) {
+                  // Marcar como turno actual
+                  td.classList.add('current-shift');
+                  console.log(`¡TURNO ACTUAL ENCONTRADO! ${cellValue}`);
+                }
+              }
+              
+              // Verificar si es una celda de evento especial (esto se mantiene igual)
               if (cellValue.includes('DRIFT') || cellValue.includes('AZURE') || 
                   cellValue.includes('AURA') || cellValue.includes('AMMOS') || 
                   cellValue.includes('BAOLI')) {
-                
                 // Almacenar el venue para uso posterior en markSpecialEventInTable
                 td.setAttribute('data-venue', cellValue.split(' ')[0]);
-                
-                const timeMatch = cellValue.match(
-                  /(\d+)(?::(\d+))?\s*-\s*(\d+)(?::(\d+))?/i
-                );
-                if (timeMatch) {
-                  let [ , startH, startM, endH, endM ] = timeMatch;
-                  startH = parseInt(startH, 10);
-                  endH = parseInt(endH, 10);
-                  startM = parseInt(startM || '0', 10);
-                  endM = parseInt(endM || '0', 10);
-                  
-                  // Asumiendo que todos son PM
-                  if (startH < 12) startH += 12;
-                  if (endH < 12) endH += 12;
-                  
-                  const scheduleStart = startH * 60 + startM;
-                  const scheduleEnd = endH * 60 + endM;
-                  const now = new Date();
-                  const currentTime = now.getHours() * 60 + now.getMinutes();
-                  const currentDay = now.getDay();
-                  const dayIndex = (currentDay === 0) ? 7 : currentDay;
-                  
-                  // Añadir logs para depuración
-                  console.log(`Celda: ${cellValue}, Día: ${i}, Día actual: ${dayIndex}`);
-                  console.log(`Hora actual: ${now.getHours()}:${now.getMinutes()} (${currentTime} minutos)`);
-                  console.log(`Rango del turno: ${startH}:${startM}-${endH}:${endM} (${scheduleStart}-${scheduleEnd} minutos)`);
-                  
-                  if (i === dayIndex && currentTime >= scheduleStart && currentTime < scheduleEnd) {
-                    // Solo la columna del día actual se resalta en verde si la hora actual cae en el rango
-                    // Y no es una celda de evento especial (verificaremos esto después)
-                    td.classList.add('potential-current-shift');
-                  }
-                }
               }
             }
             
@@ -428,6 +430,7 @@
           console.log('Horario cargado correctamente, ahora cargando eventos especiales...');
           // Esperar un momento para asegurarse de que la tabla está completamente renderizada
           setTimeout(() => {
+            // Ya no necesitamos llamar a confirmCurrentShifts()
             fetchSpecialEvents();
           }, 2000);
         })
@@ -435,10 +438,7 @@
           console.error('Error en fetchSchedule:', error);
         });
       
-      document.getElementById('current-month').textContent = new Date()
-        .toLocaleString('en-US', { month: 'long' })
-        .toUpperCase();
-
+      // El resto del código permanece igual
       const hamburger = document.querySelector('.hamburger');
       const navMenu = document.querySelector('.nav-menu');
       const venuesToggle = document.querySelector('.venues-toggle');
@@ -448,13 +448,48 @@
         navMenu.classList.toggle('active');
       });
       
+      // Mejorar la funcionalidad del menú desplegable
       venuesToggle.addEventListener('click', (e) => {
         e.preventDefault();
         e.stopPropagation();
-        venuesToggle.parentElement.classList.toggle('submenu-active');
+        console.log('Toggle clicked'); // Añadir log para depuración
+        const venuesItem = document.querySelector('.venues-item');
+        venuesItem.classList.toggle('submenu-active');
+        console.log('submenu-active class applied:', venuesItem.classList.contains('submenu-active'));
+      });
+      
+      // Cerrar el submenú cuando se hace clic fuera de él
+      document.addEventListener('click', (e) => {
+        const venuesItem = document.querySelector('.venues-item');
+        if (venuesItem && !venuesItem.contains(e.target)) {
+          venuesItem.classList.remove('submenu-active');
+        }
+      });
+      
+      // Cerrar el menú hamburguesa cuando se hace clic en un enlace
+      // Modificamos este selector para excluir el botón de VENUES
+      document.querySelectorAll('.nav-link:not(.venues-toggle)').forEach(link => {
+        link.addEventListener('click', () => {
+          hamburger.classList.remove('active');
+          navMenu.classList.remove('active');
+        });
       });
     });
 
+    // Añadir esta nueva función justo antes del event listener de DOMContentLoaded
+    // Función para confirmar los turnos actuales
+    function confirmCurrentShifts() {
+      console.log('Confirmando turnos actuales...');
+      const potentialShifts = document.querySelectorAll('.potential-current-shift');
+      potentialShifts.forEach(cell => {
+        // Verificar que no sea una celda de evento especial
+        if (!cell.classList.contains('special-event-cell')) {
+          cell.classList.add('current-shift');
+          console.log('Turno actual confirmado:', cell.textContent);
+        }
+      });
+    }
+    
     document.getElementById('shareButton').addEventListener('click', async () => {
       try {
         const url = window.location.href;
