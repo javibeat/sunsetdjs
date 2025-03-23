@@ -269,6 +269,17 @@
           return;
         }
         
+        // Check if this DJ has already checked in for this venue and shift today
+        const checkInKey = `${dj}_${venue}_${date}_${shift}`;
+        if (localStorage.getItem(checkInKey)) {
+          document.getElementById('error-message').textContent = 'You have already checked in for this shift today.';
+          document.getElementById('error-message').style.display = 'block';
+          setTimeout(() => {
+            document.getElementById('error-message').style.display = 'none';
+          }, 5000);
+          return;
+        }
+        
         // Show a temporary message that we're processing
         document.getElementById('success-message').textContent = 'Processing check-in...';
         document.getElementById('success-message').style.display = 'block';
@@ -284,7 +295,7 @@
             formData.append(key, payload[key]);
           }
           
-          const response = await fetch('https://script.google.com/macros/s/AKfycbwtU0rI_QP6ZAp-JQxca0frfqowlL7vjZ_8064k_bg7Jk_8O2wckWuenzCTrSdohQFlaA/exec', {
+          const response = await fetch('https://script.google.com/macros/s/AKfycbwPRo_fUKycuq7Xv3XoOzu5LqvUV0sgCQ5FcgM8oCqJh-_jut80n51QropOnLsPa2u_6Q/exec', {
             method: 'POST',
             mode: 'no-cors', // This helps with CORS issues
             body: formData,
@@ -296,6 +307,9 @@
           // we'll assume success if we get here without an error
           document.getElementById('success-message').textContent = 'Check-in successful! Thank you.';
           document.getElementById('checkin-form').reset();
+          
+          // Store the check-in in localStorage to prevent duplicates
+          localStorage.setItem(checkInKey, 'true');
           
           // Reset shift selection after form reset
           if (isMorningShift) {
