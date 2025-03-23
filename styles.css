@@ -597,3 +597,34 @@ td.special-event-cell.current-shift {
     background-color: transparent;
   }*/
 }
+
+/* Estilos para la tabla con columna fija en móvil */
+@media (max-width: 768px) {
+  #schedule-table {
+    table-layout: fixed;
+    width: 100%;
+    display: block;
+    overflow-x: auto;
+  }
+  
+  #schedule-table thead th:first-child,
+  #schedule-table tbody td:first-child {
+    position: sticky;
+    left: 0;
+    background-color: #f8f9fa;
+    z-index: 1;
+    box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+  }
+  
+  #schedule-table thead th:first-child {
+    background-color: #0275d8;
+    color: white;
+  }
+  
+  /* Asegurar que la columna fija tenga un ancho adecuado */
+  #schedule-table th:first-child,
+  #schedule-table td:first-child {
+    min-width: 80px;
+    max-width: 100px;
+  }
+}
