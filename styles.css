@@ -115,8 +115,11 @@ h1 {
 
 table {
   width: 100%;
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
   background: white;
+  border-radius: 18px;
+  overflow: hidden;
 }
 
 /* Unified cell styles */
@@ -626,5 +629,79 @@ td.special-event-cell.current-shift {
   #schedule-table td:first-child {
     min-width: 80px;
     max-width: 100px;
+  }
+}
+
+/* Ajustes globales para los días de la semana */
+#schedule-table thead th {
+  white-space: nowrap;
+  font-size: 0.85rem; /* Tamaño base más legible */
+  overflow: visible;
+}
+
+/* Ajustes específicos para tablet en modo horizontal */
+@media (min-width: 769px) and (max-width: 1024px) and (orientation: landscape) {
+  #schedule-table {
+    width: 100%;
+    table-layout: fixed;
+    overflow-x: visible;
+    border-radius: 18px;
+    overflow: hidden;
+  }
+  
+  #schedule-table th,
+  #schedule-table td {
+    padding: 0.6rem 0.4rem;
+    font-size: 0.85rem;
+    min-width: unset;
+    width: 12.5%; /* 100% / 8 columnas (1 para DJ + 7 días) */
+  }
+  
+  /* Ajuste específico para los días de la semana */
+  #schedule-table thead th {
+    font-size: 0.7rem; /* Ligeramente más grande que antes */
+    padding: 0.6rem 0.2rem;
+    letter-spacing: 0;
+  }
+  
+  #schedule-container {
+    overflow-x: visible;
+    border-radius: 18px;
+  }
+  
+  /* Reducir el ancho mínimo para todas las celdas */
+  td, th {
+    min-width: unset !important;
+  }
+}
+
+/* Ajustes para móvil para los días de la semana */
+@media (max-width: 768px) {
+  /* Ajuste específico para los días de la semana en móvil */
+  #schedule-table thead th {
+    font-size: 0.7rem; /* Más grande para mejor legibilidad en móvil */
+    padding: 0.6rem 0.15rem;
+    letter-spacing: 0;
+  }
+}
+
+/* Ajustes para escritorio para evitar scroll horizontal */
+@media (min-width: 1025px) {
+  #schedule-table {
+    width: 100%;
+    table-layout: fixed;
+    border-radius: 18px;
+    overflow: hidden;
+  }
+  
+  #schedule-table th,
+  #schedule-table td {
+    min-width: unset;
+    width: 12.5%; /* 100% / 8 columnas (1 para DJ + 7 días) */
+  }
+  
+  #schedule-container {
+    overflow-x: visible;
+    border-radius: 18px;
   }
 }
