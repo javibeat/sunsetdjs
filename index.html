@@ -513,6 +513,7 @@
       const currentDate = new Date();
       const currentMonth = currentDate.getMonth();
       const currentYear = currentDate.getFullYear();
+      const currentDay = currentDate.getDate();
       
       // Obtener el nombre del mes actual para mostrar en el título
       const monthName = document.getElementById('current-month').textContent || 'APRIL';
@@ -524,16 +525,20 @@
           const timeRange = djSchedule[i].match(/(\d+(?::\d+)?(?:\s*(?:AM|PM))?)\s*-\s*(\d+(?::\d+)?(?:\s*(?:AM|PM))?)/i);
           
           if (timeRange) {
-            // Encontrar la primera fecha de este día de la semana en el mes actual
-            const firstDate = getFirstDayOfMonth(i, currentMonth, currentYear);
+            // Encontrar todas las fechas de este día de la semana en el mes actual
+            // comenzando desde la fecha actual
+            const dates = getAllDatesForDayInMonth(i, currentMonth, currentYear, currentDay);
             
-            events.push({
-              venue,
-              startTime: timeRange[1],
-              endTime: timeRange[2],
-              dayIndex: i,
-              firstDate: firstDate,
-              monthName: monthName
+            // Crear un evento para cada fecha
+            dates.forEach(date => {
+              events.push({
+                venue,
+                startTime: timeRange[1],
+                endTime: timeRange[2],
+                dayIndex: i,
+                date: date,
+                monthName: monthName
+              });
             });
           }
         }
@@ -542,25 +547,31 @@
       generateICSFile(djName, events);
     }
 
-    // Función para obtener la primera fecha de un día específico en el mes actual
-    function getFirstDayOfMonth(dayIndex, month, year) {
+    // Función para obtener todas las fechas de un día específico en el mes actual
+    // comenzando desde la fecha actual
+    function getAllDatesForDayInMonth(dayIndex, month, year, startDay) {
+      const dates = [];
+      
       // Convertir dayIndex (1-7, lunes-domingo) a formato JavaScript (0-6, domingo-sábado)
       const jsDayIndex = dayIndex === 7 ? 0 : dayIndex;
       
-      // Crear fecha para el primer día del mes
-      const firstDay = new Date(year, month, 1);
+      // Fecha actual
+      const today = new Date(year, month, startDay);
       
-      // Calcular días hasta el primer día de la semana deseado
-      let daysToAdd = (jsDayIndex - firstDay.getDay() + 7) % 7;
+      // Último día del mes
+      const lastDayOfMonth = new Date(year, month + 1, 0).getDate();
       
-      // Si el resultado es 0 y no estamos buscando el domingo (0), añadir 7 días
-      if (daysToAdd === 0 && jsDayIndex !== 0) {
-        daysToAdd = 7;
+      // Iterar desde la fecha actual hasta el final del mes
+      for (let day = startDay; day <= lastDayOfMonth; day++) {
+        const date = new Date(year, month, day);
+        
+        // Si el día de la semana coincide, añadir a la lista
+        if (date.getDay() === jsDayIndex) {
+          dates.push(new Date(date));
+        }
       }
       
-      // Crear la fecha resultante
-      const firstDayOfType = new Date(year, month, 1 + daysToAdd);
-      return firstDayOfType;
+      return dates;
     }
 
     function generateICSFile(djName, events) {
@@ -573,22 +584,18 @@
       ];
 
       events.forEach(event => {
-        // Obtener el último día del mes actual
-        const lastDayOfMonth = new Date(event.firstDate.getFullYear(), event.firstDate.getMonth() + 1, 0);
+        // Crear eventos individuales para cada fecha
+        const startDate = formatICSDate(event.date, event.startTime);
+        const endDate = formatICSDate(event.date, event.endTime);
         
-        // Formatear la fecha de inicio y fin para RRULE
-        const startDate = formatICSDate(event.firstDate, event.startTime);
-        const untilDate = formatICSDateForUntil(lastDayOfMonth);
-        
-        // Crear el evento con regla de recurrencia
+        // Crear el evento sin regla de recurrencia
         icsContent = icsContent.concat([
           'BEGIN:VEVENT',
           `SUMMARY:${djName} at ${event.venue}`,
           `DTSTART:${startDate}`,
-          `DTEND:${formatICSDate(event.firstDate, event.endTime)}`,
-          `RRULE:FREQ=WEEKLY;UNTIL=${untilDate}`,
+          `DTEND:${endDate}`,
           `LOCATION:${event.venue} Dubai`,
-          `DESCRIPTION:Regular DJ set for ${djName} at ${event.venue} during ${event.monthName}`,
+          `DESCRIPTION:DJ set for ${djName} at ${event.venue}`,
           'END:VEVENT'
         ]);
       });
@@ -597,6 +604,7 @@
       downloadICSFile(djName, icsContent.join('\r\n')); // Usar CRLF según especificación iCalendar
     }
 
+    // El resto de las funciones permanecen igual
     function downloadICSFile(djName, content) {
       const blob = new Blob([content], { type: 'text/calendar;charset=utf-8' });
       const url = window.URL.createObjectURL(blob);
