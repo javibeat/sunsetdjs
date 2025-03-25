@@ -508,74 +508,149 @@
     function createCalendarEvents(djSchedule) {
       const djName = djSchedule[0];
       let events = [];
+      
+      // Obtener el mes actual y año
+      const currentDate = new Date();
+      const currentMonth = currentDate.getMonth();
+      const currentYear = currentDate.getFullYear();
+      
+      // Obtener el nombre del mes actual para mostrar en el título
+      const monthName = document.getElementById('current-month').textContent || 'APRIL';
+      
       for (let i = 1; i < 8; i++) {
-        if (djSchedule[i]) {
-          const venue = djSchedule[i].split(' ')[0];
+        if (djSchedule[i] && djSchedule[i] !== '—') {
+          const venueParts = djSchedule[i].split(' ');
+          const venue = venueParts[0];
           const timeRange = djSchedule[i].match(/(\d+(?::\d+)?(?:\s*(?:AM|PM))?)\s*-\s*(\d+(?::\d+)?(?:\s*(?:AM|PM))?)/i);
+          
           if (timeRange) {
+            // Encontrar la primera fecha de este día de la semana en el mes actual
+            const firstDate = getFirstDayOfMonth(i, currentMonth, currentYear);
+            
             events.push({
               venue,
               startTime: timeRange[1],
               endTime: timeRange[2],
-              dayIndex: i
+              dayIndex: i,
+              firstDate: firstDate,
+              monthName: monthName
             });
           }
         }
       }
+      
       generateICSFile(djName, events);
+    }
+
+    // Función para obtener la primera fecha de un día específico en el mes actual
+    function getFirstDayOfMonth(dayIndex, month, year) {
+      // Convertir dayIndex (1-7, lunes-domingo) a formato JavaScript (0-6, domingo-sábado)
+      const jsDayIndex = dayIndex === 7 ? 0 : dayIndex;
+      
+      // Crear fecha para el primer día del mes
+      const firstDay = new Date(year, month, 1);
+      
+      // Calcular días hasta el primer día de la semana deseado
+      let daysToAdd = (jsDayIndex - firstDay.getDay() + 7) % 7;
+      
+      // Si el resultado es 0 y no estamos buscando el domingo (0), añadir 7 días
+      if (daysToAdd === 0 && jsDayIndex !== 0) {
+        daysToAdd = 7;
+      }
+      
+      // Crear la fecha resultante
+      const firstDayOfType = new Date(year, month, 1 + daysToAdd);
+      return firstDayOfType;
     }
 
     function generateICSFile(djName, events) {
       let icsContent = [
         'BEGIN:VCALENDAR',
         'VERSION:2.0',
-        'PRODID:-//DJ Schedule//EN'
+        'PRODID:-//DJ Schedule//EN',
+        'CALSCALE:GREGORIAN',
+        'METHOD:PUBLISH'
       ];
 
       events.forEach(event => {
-        const date = getNextDate(event.dayIndex);
+        // Obtener el último día del mes actual
+        const lastDayOfMonth = new Date(event.firstDate.getFullYear(), event.firstDate.getMonth() + 1, 0);
+        
+        // Formatear la fecha de inicio y fin para RRULE
+        const startDate = formatICSDate(event.firstDate, event.startTime);
+        const untilDate = formatICSDateForUntil(lastDayOfMonth);
+        
+        // Crear el evento con regla de recurrencia
         icsContent = icsContent.concat([
           'BEGIN:VEVENT',
           `SUMMARY:${djName} at ${event.venue}`,
-          `DTSTART:${formatICSDate(date, event.startTime)}`,
-          `DTEND:${formatICSDate(date, event.endTime)}`,
+          `DTSTART:${startDate}`,
+          `DTEND:${formatICSDate(event.firstDate, event.endTime)}`,
+          `RRULE:FREQ=WEEKLY;UNTIL=${untilDate}`,
           `LOCATION:${event.venue} Dubai`,
+          `DESCRIPTION:Regular DJ set for ${djName} at ${event.venue} during ${event.monthName}`,
           'END:VEVENT'
         ]);
       });
 
       icsContent.push('END:VCALENDAR');
-      downloadICSFile(djName, icsContent.join('\n'));
+      downloadICSFile(djName, icsContent.join('\r\n')); // Usar CRLF según especificación iCalendar
     }
 
     function downloadICSFile(djName, content) {
-      const blob = new Blob([content], { type: 'text/calendar' });
+      const blob = new Blob([content], { type: 'text/calendar;charset=utf-8' });
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = `${djName}_Schedule.ics`;
+      
+      // Obtener el mes actual para el nombre del archivo
+      const monthName = document.getElementById('current-month').textContent || 'APRIL';
+      link.download = `${djName}_Schedule_${monthName}.ics`;
+      
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
     }
 
-    function getNextDate(dayIndex) {
-      const today = new Date();
-      const currentDay = today.getDay() || 7;
-      const daysUntilNext = (dayIndex - currentDay + 7) % 7;
-      const nextDate = new Date(today);
-      nextDate.setDate(today.getDate() + daysUntilNext);
-      return nextDate;
+    // Formato para fecha de inicio/fin de evento
+    function formatICSDate(date, timeStr) {
+      // Extraer horas y minutos del string de tiempo
+      let hours = 0, minutes = 0;
+      
+      // Manejar formatos como "1:30 - 5:30 pm" o "7:30 - 11 pm"
+      if (timeStr.toLowerCase().includes('pm') || timeStr.toLowerCase().includes('am')) {
+        const [time, period] = timeStr.split(/\s+(AM|PM)/i);
+        let [h, m = '00'] = time.split(':');
+        hours = parseInt(h);
+        minutes = parseInt(m);
+        
+        // Ajustar para PM
+        if (period && period.toLowerCase() === 'pm' && hours < 12) hours += 12;
+        if (period && period.toLowerCase() === 'am' && hours === 12) hours = 0;
+      } else {
+        // Manejar formatos como "1:30" o "7"
+        let [h, m = '00'] = timeStr.split(':');
+        hours = parseInt(h);
+        minutes = parseInt(m);
+        
+        // Asumir que todos son PM si es después de mediodía
+        if (hours < 12) hours += 12;
+      }
+      
+      // Crear una nueva fecha con las horas y minutos correctos
+      const eventDate = new Date(date);
+      eventDate.setHours(hours, minutes, 0, 0);
+      
+      // Formatear según especificación iCalendar
+      return eventDate.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
     }
 
-    function formatICSDate(date, timeStr) {
-      const [time, period] = timeStr.split(/\s+(AM|PM)/i);
-      let [hours, minutes = '00'] = time.split(':');
-      hours = parseInt(hours);
-      if (period && period.toLowerCase() === 'pm' && hours < 12) hours += 12;
-      if (period && period.toLowerCase() === 'am' && hours === 12) hours = 0;
-      return `${date.getFullYear()}${String(date.getMonth() + 1).padStart(2, '0')}${String(date.getDate()).padStart(2, '0')}T${String(hours).padStart(2, '0')}${minutes}00Z`;
+    // Formato específico para la propiedad UNTIL en RRULE
+    function formatICSDateForUntil(date) {
+      // Establecer la hora a 23:59:59 para incluir todo el último día
+      date.setHours(23, 59, 59, 0);
+      return date.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
     }
   </script>
 </body>
