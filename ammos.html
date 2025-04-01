@@ -31,7 +31,7 @@
   </nav>
 
   <div class="container">
-    <h1>AMMOS Schedule APRIL</h1>
+    <h1>AMMOS Schedule <span id="current-month"></span></h1>
     <div id="schedule-container">
       <table id="schedule-table">
         <thead>
@@ -58,6 +58,23 @@
   </div>
 
   <script>
+    // Function to update the current month display
+    function updateCurrentMonth() {
+      const months = [
+        'JANUARY', 'FEBRUARY', 'MARCH', 'APRIL', 
+        'MAY', 'JUNE', 'JULY', 'AUGUST',
+        'SEPTEMBER', 'OCTOBER', 'NOVEMBER', 'DECEMBER'
+      ];
+      const currentDate = new Date();
+      const currentMonth = months[currentDate.getMonth()];
+      
+      // Update the month in the title
+      const monthElement = document.getElementById('current-month');
+      if (monthElement) {
+        monthElement.textContent = currentMonth;
+      }
+    }
+    
     async function fetchSchedule() {
       try {
         const SHEET_ID = '1gr_yWuMPAHMUOFo4A3mTin6vqKrlK3CiCsNL98WnMF0';
@@ -142,6 +159,9 @@
     }
 
     document.addEventListener('DOMContentLoaded', () => {
+      // Update the current month display
+      updateCurrentMonth();
+      
       fetchSchedule();
       
       // Corregir el error: current-month no existe en ammos.html
@@ -188,10 +208,13 @@
     document.getElementById('shareButton').addEventListener('click', async () => {
       try {
         const url = window.location.href;
-        const currentMonth = new Date().toLocaleString('en-US', { month: 'long' }).toUpperCase();
+        const monthText = document.getElementById('current-month') ? 
+                         document.getElementById('current-month').textContent : 
+                         new Date().toLocaleString('en-US', { month: 'long' }).toUpperCase();
+        
         await navigator.share({
           title: 'AMMOS DJ Schedule',
-          text: `Check out the DJ schedule for AMMOS - ${currentMonth}`,
+          text: `Check out the DJ schedule for AMMOS - ${monthText}`,
           url: url
         });
       } catch (err) {
