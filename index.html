@@ -555,53 +555,88 @@
       return dates;
     }
     
-    // Procesar cada día de la semana (columnas 1-7)
-    for (let dayIndex = 1; dayIndex <= 7; dayIndex++) {
-      const cellValue = row[dayIndex];
-      
-      // Ignorar celdas vacías o con guiones
-      if (!cellValue || cellValue === '—') continue;
-      
-      // Verificar si la celda contiene un horario (formato: "1-5" o "1:30-5:30")
-      const timeMatch = cellValue.match(/(\d+)(?::(\d+))?\s*-\s*(\d+)(?::(\d+))?/);
-      
-      if (timeMatch) {
-        // Extraer horas y minutos
-        let [, startH, startM, endH, endM] = timeMatch;
-        startH = parseInt(startH, 10);
-        endH = parseInt(endH, 10);
-        startM = parseInt(startM || '0', 10);
-        endM = parseInt(endM || '0', 10);
+    // Función para procesar una fila y extraer eventos para el calendario
+    function processRowForCalendar(row, djName, currentMonth, currentYear, currentDay, monthName, events) {
+      // Procesar cada día de la semana (columnas 1-7)
+      for (let dayIndex = 1; dayIndex <= 7; dayIndex++) {
+        const cellValue = row[dayIndex];
         
-        // Convertir a formato 24h (asumiendo PM para horarios de DJ)
-        if (startH < 12) startH += 12;
-        if (endH < 12) endH += 12;
+        // Ignorar celdas vacías o con guiones
+        if (!cellValue || cellValue === '—') continue;
         
-        // Formatear los horarios
-        const startTime = `${startH}:${startM.toString().padStart(2, '0')}`;
-        const endTime = `${endH}:${endM.toString().padStart(2, '0')}`;
+        // Verificar si la celda contiene un horario (formato: "1-5" o "1:30-5:30")
+        const timeMatch = cellValue.match(/(\d+)(?::(\d+))?\s*-\s*(\d+)(?::(\d+))?/);
         
-        // Extraer el venue si está presente
-        let venue = 'Unknown Venue';
-        if (cellValue.includes('DRIFT')) venue = 'DRIFT';
-        else if (cellValue.includes('AZURE')) venue = 'AZURE';
-        else if (cellValue.includes('AURA')) venue = 'AURA';
-        else if (cellValue.includes('AMMOS')) venue = 'AMMOS';
-        else if (cellValue.includes('BAOLI')) venue = 'BAOLI';
-        
-        // Obtener todas las fechas para este día de la semana en el mes actual
-        const dates = getAllDatesForDayInMonth(dayIndex, currentMonth, currentYear, currentDay);
-        
-        // Crear un evento para cada fecha
-        dates.forEach(date => {
-          events.push({
-            date: date,
-            startTime: startTime,
-            endTime: endTime,
-            venue: venue
+        if (timeMatch) {
+          // Extraer horas y minutos
+          let [, startH, startM, endH, endM] = timeMatch;
+          startH = parseInt(startH, 10);
+          endH = parseInt(endH, 10);
+          startM = parseInt(startM || '0', 10);
+          endM = parseInt(endM || '0', 10);
+          
+          // Convertir a formato 24h (asumiendo PM para horarios de DJ)
+          if (startH < 12) startH += 12;
+          if (endH < 12) endH += 12;
+          
+          // Formatear los horarios
+          const startTime = `${startH}:${startM.toString().padStart(2, '0')}`;
+          const endTime = `${endH}:${endM.toString().padStart(2, '0')}`;
+          
+          // Extraer el venue si está presente
+          let venue = 'Unknown Venue';
+          if (cellValue.includes('DRIFT')) venue = 'DRIFT';
+          else if (cellValue.includes('AZURE')) venue = 'AZURE';
+          else if (cellValue.includes('AURA')) venue = 'AURA';
+          else if (cellValue.includes('AMMOS')) venue = 'AMMOS';
+          else if (cellValue.includes('BAOLI')) venue = 'BAOLI';
+          
+          // Obtener todas las fechas para este día de la semana en el mes actual
+          const dates = getAllDatesForDayInMonth(dayIndex, currentMonth, currentYear, currentDay);
+          
+          // Crear un evento para cada fecha
+          dates.forEach(date => {
+            events.push({
+              date: date,
+              startTime: startTime,
+              endTime: endTime,
+              venue: venue
+            });
           });
-        });
+        }
       }
+    }
+    
+    // Función para formatear fechas en formato iCalendar
+    function formatICSDate(date, timeStr) {
+      const [hours, minutes] = timeStr.split(':').map(num => parseInt(num, 10));
+      const eventDate = new Date(date);
+      eventDate.setHours(hours, minutes, 0, 0);
+      
+      const year = eventDate.getFullYear();
+      const month = (eventDate.getMonth() + 1).toString().padStart(2, '0');
+      const day = eventDate.getDate().toString().padStart(2, '0');
+      const hour = eventDate.getHours().toString().padStart(2, '0');
+      const minute = eventDate.getMinutes().toString().padStart(2, '0');
+      
+      return `${year}${month}${day}T${hour}${minute}00`;
+    }
+    
+    // Función para descargar el archivo ICS
+    function downloadICSFile(djName, content) {
+      const blob = new Blob([content], { type: 'text/calendar;charset=utf-8' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      
+      // Obtener el mes actual para el nombre del archivo
+      const monthName = document.getElementById('current-month').textContent || 'CURRENT';
+      link.download = `${djName}_Schedule_${monthName}.ics`;
+      
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
     }
     
     function generateICSFile(djName, events) {
@@ -634,19 +669,27 @@
       downloadICSFile(djName, icsContent.join('\r\n')); // Usar CRLF según especificación iCalendar
     }
 
-    // Arreglar el botón de compartir
+    // Configurar el botón de compartir
     document.getElementById('shareButton').addEventListener('click', async () => {
       try {
         const url = window.location.href;
         const monthText = document.getElementById('current-month').textContent;
         
-        await navigator.share({
-          title: 'DJ Schedule',
-          text: `Mira el horario de DJs para ${monthText}`,
-          url: url
-        });
+        if (navigator.share) {
+          await navigator.share({
+            title: 'DJ Schedule',
+            text: `Mira el horario de DJs para ${monthText}`,
+            url: url
+          });
+          console.log('Contenido compartido exitosamente');
+        } else {
+          // Fallback para navegadores que no soportan Web Share API
+          navigator.clipboard.writeText(url);
+          alert('¡Enlace copiado al portapapeles!');
+        }
       } catch (err) {
         console.error('Error al compartir:', err);
+        // Intentar copiar al portapapeles como fallback
         navigator.clipboard.writeText(window.location.href);
         alert('¡Enlace copiado al portapapeles!');
       }
