@@ -584,7 +584,9 @@
           const endTime = `${endH}:${endM.toString().padStart(2, '0')}`;
           
           // Extraer el venue si está presente
-          let venue = 'Unknown Venue';
+          let venue = 'DRIFT'; // Valor predeterminado en caso de que no se detecte ninguno
+          
+          // Detectar el venue en la celda
           if (cellValue.includes('DRIFT')) venue = 'DRIFT';
           else if (cellValue.includes('AZURE')) venue = 'AZURE';
           else if (cellValue.includes('AURA')) venue = 'AURA';
