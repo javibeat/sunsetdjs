@@ -525,46 +525,35 @@
       // Buscar todas las filas que pertenecen al mismo DJ
       const allDjRows = getAllRowsForDj(djName);
       
-      // Procesar la fila actual
-      processRowForCalendar(djSchedule, djName, currentMonth, currentYear, currentDay, monthName, events);
-      
-      // Procesar las filas adicionales encontradas
+      // Procesar solo las filas encontradas (incluyendo la actual)
+      // Evitamos procesar la fila actual por separado para evitar duplicados
       allDjRows.forEach(row => {
-        if (row !== djSchedule) { // Evitar procesar la misma fila dos veces
-          processRowForCalendar(row, djName, currentMonth, currentYear, currentDay, monthName, events);
+        processRowForCalendar(row, djName, currentMonth, currentYear, currentDay, monthName, events);
+      });
+      
+      // Eliminar duplicados basados en fecha, venue y horario
+      const uniqueEvents = removeDuplicateEvents(events);
+      
+      generateICSFile(djName, uniqueEvents);
+    }
+    
+    // Función para eliminar eventos duplicados
+    function removeDuplicateEvents(events) {
+      const uniqueMap = new Map();
+      
+      events.forEach(event => {
+        // Crear una clave única basada en fecha, venue y horario
+        const dateStr = event.date.toDateString();
+        const key = `${dateStr}-${event.venue}-${event.startTime}-${event.endTime}`;
+        
+        // Solo guardar el evento si no existe ya con la misma clave
+        if (!uniqueMap.has(key)) {
+          uniqueMap.set(key, event);
         }
       });
       
-      generateICSFile(djName, events);
-    }
-    
-    // Función para procesar una fila para el calendario
-    function processRowForCalendar(row, djName, currentMonth, currentYear, currentDay, monthName, events) {
-      for (let i = 1; i < 8; i++) {
-        if (row[i] && row[i] !== '—') {
-          const venueParts = row[i].split(' ');
-          const venue = venueParts[0];
-          const timeRange = row[i].match(/(\d+(?::\d+)?(?:\s*(?:AM|PM))?)\s*-\s*(\d+(?::\d+)?(?:\s*(?:AM|PM))?)/i);
-          
-          if (timeRange) {
-            // Encontrar todas las fechas de este día de la semana en el mes actual
-            // comenzando desde la fecha actual
-            const dates = getAllDatesForDayInMonth(i, currentMonth, currentYear, currentDay);
-            
-            // Crear un evento para cada fecha
-            dates.forEach(date => {
-              events.push({
-                venue,
-                startTime: timeRange[1],
-                endTime: timeRange[2],
-                dayIndex: i,
-                date: date,
-                monthName: monthName
-              });
-            });
-          }
-        }
-      }
+      // Convertir el mapa de vuelta a un array
+      return Array.from(uniqueMap.values());
     }
     
     // Función para obtener todas las filas que pertenecen al mismo DJ
@@ -577,20 +566,30 @@
       // Buscar todas las filas de la tabla
       const tableRows = table.querySelectorAll('tbody tr');
       
+      // Primero, encontrar todas las filas que tienen el nombre del DJ en la primera celda
       tableRows.forEach(tr => {
         const cells = tr.querySelectorAll('td');
         if (cells.length > 0) {
-          // Verificar si la primera celda contiene el nombre del DJ
           const firstCell = cells[0];
-          const cellText = firstCell.textContent || '';
           
-          // Si la celda contiene un span (para el nombre del DJ), extraer su texto
+          // Verificar si la celda contiene el nombre del DJ
+          // Primero intentar con el span (para filas con botón)
           const nameSpan = firstCell.querySelector('span');
-          const djText = nameSpan ? nameSpan.textContent : cellText;
+          const djText = nameSpan ? nameSpan.textContent.trim() : firstCell.textContent.trim();
           
-          if (djText.trim() === djName.trim()) {
-            // Convertir la fila HTML a un array de valores
-            const rowData = Array.from(cells).map(cell => cell.textContent || '');
+          if (djText === djName.trim()) {
+            // Convertir la fila HTML a un array de valores para el calendario
+            const rowData = [];
+            
+            cells.forEach(cell => {
+              // Para la primera celda (DJ), usar solo el nombre
+              if (cell === firstCell) {
+                rowData.push(djName);
+              } else {
+                rowData.push(cell.textContent.trim());
+              }
+            });
+            
             rows.push(rowData);
           }
         }
