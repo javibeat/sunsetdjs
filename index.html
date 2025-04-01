@@ -58,6 +58,50 @@
     </button>
   </div>
 
+  <style>
+      .calendar-btn-alt {
+        background-color: #4a90e2;
+        position: relative;
+        margin-left: 5px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        border: none;
+        cursor: pointer;
+        color: white;
+      }
+      
+      .calendar-btn-alt span {
+        position: absolute;
+        top: -5px;
+        right: -5px;
+        background-color: #e74c3c;
+        color: white;
+        border-radius: 50%;
+        font-size: 8px;
+        padding: 2px 4px;
+        line-height: 1;
+      }
+      
+      /* Estilo para el botón principal también */
+      .calendar-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        border: none;
+        background-color: #27ae60;
+        color: white;
+        cursor: pointer;
+        margin-left: 5px;
+      }
+    </style>
+
   <script>
     // Add this function at the beginning of your script
     function updateCurrentMonth() {
@@ -132,13 +176,49 @@
                 nameContainer.style.gap = '8px';
                 const nameSpan = document.createElement('span');
                 nameSpan.textContent = cellValue;
+                
+                // Botón para la fila actual
                 const calendarBtn = document.createElement('button');
                 calendarBtn.className = 'calendar-btn';
                 calendarBtn.innerHTML = '<i class="fas fa-calendar-plus"></i>';
                 calendarBtn.title = 'Add to Calendar';
                 calendarBtn.onclick = () => createCalendarEvents(row, cellValue);
-                nameContainer.appendChild(nameSpan);
-                nameContainer.appendChild(calendarBtn);
+                
+                // Verificar si hay una segunda fila para este DJ o si esta es una segunda fila
+                const nextRowIndex = rowIndex + 1;
+                const prevRowIndex = rowIndex - 1;
+                
+                // Comprobar si esta es una segunda fila (misma primera columna que la fila anterior)
+                const isSecondRow = prevRowIndex >= 0 && dataRows[prevRowIndex][0] === cellValue;
+                
+                // Comprobar si hay una segunda fila
+                const hasNextRow = nextRowIndex < dataRows.length && dataRows[nextRowIndex][0] === cellValue;
+                
+                console.log(`DJ: ${cellValue}, isSecondRow: ${isSecondRow}, hasNextRow: ${hasNextRow}`);
+                
+                if (isSecondRow) {
+                  // Esta es una segunda fila, añadir un botón normal
+                  nameContainer.appendChild(nameSpan);
+                  nameContainer.appendChild(calendarBtn);
+                } else if (hasNextRow) {
+                  // Hay una segunda fila, añadir botón para la segunda fila
+                  const calendarBtn2 = document.createElement('button');
+                  calendarBtn2.className = 'calendar-btn calendar-btn-alt';
+                  calendarBtn2.innerHTML = '<i class="fas fa-calendar-plus"></i><span>+2</span>';
+                  calendarBtn2.title = 'Add Second Row to Calendar';
+                  calendarBtn2.onclick = () => createCalendarEvents(dataRows[nextRowIndex], cellValue);
+                  
+                  // Añadir ambos botones
+                  nameContainer.appendChild(nameSpan);
+                  nameContainer.appendChild(calendarBtn);
+                  nameContainer.appendChild(calendarBtn2);
+                  
+                  console.log(`Añadido botón para segunda fila de ${cellValue}`);
+                } else {
+                  // Solo añadir el botón principal
+                  nameContainer.appendChild(nameSpan);
+                  nameContainer.appendChild(calendarBtn);
+                }
                 td.appendChild(nameContainer);
               } else {
                 td.textContent = '—';
@@ -522,6 +602,32 @@
       
       // Procesar la fila para extraer eventos
       processRowForCalendar(row, djName, currentMonth, currentYear, currentDay, monthName, events);
+      
+      // Buscar si hay una segunda fila para este DJ
+      const tableBody = document.querySelector('#schedule-table tbody');
+      const rows = Array.from(tableBody.querySelectorAll('tr'));
+      
+      // Encontrar el índice de la fila actual
+      const currentRowIndex = rows.findIndex(r => {
+        const firstCell = r.querySelector('td:first-child');
+        return firstCell && firstCell.textContent.includes(djName);
+      });
+      
+      // Verificar si la siguiente fila es del mismo DJ
+      if (currentRowIndex !== -1 && currentRowIndex + 1 < rows.length) {
+        const nextRow = rows[currentRowIndex + 1];
+        const nextRowFirstCell = nextRow.querySelector('td:first-child');
+        
+        if (nextRowFirstCell && nextRowFirstCell.textContent.includes(djName)) {
+          console.log(`Encontrada segunda fila para ${djName}, combinando eventos...`);
+          
+          // Extraer los valores de la segunda fila
+          const secondRowValues = Array.from(nextRow.querySelectorAll('td')).map(cell => cell.textContent);
+          
+          // Procesar también la segunda fila
+          processRowForCalendar(secondRowValues, djName, currentMonth, currentYear, currentDay, monthName, events);
+        }
+      }
       
       // Generar y descargar el archivo ICS
       if (events.length > 0) {
