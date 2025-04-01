@@ -184,44 +184,37 @@
                 calendarBtn.title = 'Add to Calendar';
                 calendarBtn.onclick = () => createCalendarEvents(row, cellValue);
                 
-                // Verificar si hay una segunda fila para este DJ o si esta es una segunda fila
-                const nextRowIndex = rowIndex + 1;
-                const prevRowIndex = rowIndex - 1;
-                
-                // Comprobar si esta es una segunda fila (misma primera columna que la fila anterior)
-                const isSecondRow = prevRowIndex >= 0 && dataRows[prevRowIndex][0] === cellValue;
-                
-                // Comprobar si hay una segunda fila
-                const hasNextRow = nextRowIndex < dataRows.length && dataRows[nextRowIndex][0] === cellValue;
-                
-                console.log(`DJ: ${cellValue}, isSecondRow: ${isSecondRow}, hasNextRow: ${hasNextRow}`);
-                
-                if (isSecondRow) {
-                  // Esta es una segunda fila, añadir un botón normal
-                  nameContainer.appendChild(nameSpan);
-                  nameContainer.appendChild(calendarBtn);
-                } else if (hasNextRow) {
-                  // Hay una segunda fila, añadir botón para la segunda fila
-                  const calendarBtn2 = document.createElement('button');
-                  calendarBtn2.className = 'calendar-btn calendar-btn-alt';
-                  calendarBtn2.innerHTML = '<i class="fas fa-calendar-plus"></i><span>+2</span>';
-                  calendarBtn2.title = 'Add Second Row to Calendar';
-                  calendarBtn2.onclick = () => createCalendarEvents(dataRows[nextRowIndex], cellValue);
-                  
-                  // Añadir ambos botones
-                  nameContainer.appendChild(nameSpan);
-                  nameContainer.appendChild(calendarBtn);
-                  nameContainer.appendChild(calendarBtn2);
-                  
-                  console.log(`Añadido botón para segunda fila de ${cellValue}`);
-                } else {
-                  // Solo añadir el botón principal
-                  nameContainer.appendChild(nameSpan);
-                  nameContainer.appendChild(calendarBtn);
-                }
+                nameContainer.appendChild(nameSpan);
+                nameContainer.appendChild(calendarBtn);
                 td.appendChild(nameContainer);
               } else {
-                td.textContent = '—';
+                // Verificar si esta es una segunda fila de un DJ
+                const prevRowIndex = rowIndex - 1;
+                if (prevRowIndex >= 0 && dataRows[prevRowIndex][0] !== '—') {
+                  // Obtener el nombre del DJ de la fila anterior
+                  const prevDjName = dataRows[prevRowIndex][0];
+                  
+                  const nameContainer = document.createElement('div');
+                  nameContainer.style.display = 'flex';
+                  nameContainer.style.alignItems = 'center';
+                  nameContainer.style.gap = '8px';
+                  
+                  const nameSpan = document.createElement('span');
+                  nameSpan.textContent = prevDjName + ' (2)';
+                  
+                  // Botón para esta fila
+                  const calendarBtn = document.createElement('button');
+                  calendarBtn.className = 'calendar-btn';
+                  calendarBtn.innerHTML = '<i class="fas fa-calendar-plus"></i>';
+                  calendarBtn.title = 'Add to Calendar';
+                  calendarBtn.onclick = () => createCalendarEvents(row, prevDjName);
+                  
+                  nameContainer.appendChild(nameSpan);
+                  nameContainer.appendChild(calendarBtn);
+                  td.appendChild(nameContainer);
+                } else {
+                  td.textContent = '—';
+                }
               }
             } else {
               td.textContent = cellValue;
