@@ -202,15 +202,8 @@
                   const nameSpan = document.createElement('span');
                   nameSpan.textContent = prevDjName + ' (2)';
                   
-                  // Botón para esta fila
-                  const calendarBtn = document.createElement('button');
-                  calendarBtn.className = 'calendar-btn';
-                  calendarBtn.innerHTML = '<i class="fas fa-calendar-plus"></i>';
-                  calendarBtn.title = 'Add to Calendar';
-                  calendarBtn.onclick = () => createCalendarEvents(row, prevDjName);
-                  
+                  // No añadimos botón en la segunda fila, solo el nombre
                   nameContainer.appendChild(nameSpan);
-                  nameContainer.appendChild(calendarBtn);
                   td.appendChild(nameContainer);
                 } else {
                   td.textContent = '—';
