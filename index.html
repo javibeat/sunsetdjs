@@ -557,6 +557,8 @@
     
     // Función para procesar una fila y extraer eventos para el calendario
     function processRowForCalendar(row, djName, currentMonth, currentYear, currentDay, monthName, events) {
+      console.log(`Procesando fila para ${djName}:`, row);
+      
       // Procesar cada día de la semana (columnas 1-7)
       for (let dayIndex = 1; dayIndex <= 7; dayIndex++) {
         const cellValue = row[dayIndex];
@@ -564,10 +566,14 @@
         // Ignorar celdas vacías o con guiones
         if (!cellValue || cellValue === '—') continue;
         
+        console.log(`Procesando celda día ${dayIndex}: "${cellValue}"`);
+        
         // Verificar si la celda contiene un horario (formato: "1-5" o "1:30-5:30")
         const timeMatch = cellValue.match(/(\d+)(?::(\d+))?\s*-\s*(\d+)(?::(\d+))?/);
         
         if (timeMatch) {
+          console.log(`Encontrado horario en formato válido: ${timeMatch[0]}`);
+          
           // Extraer horas y minutos
           let [, startH, startM, endH, endM] = timeMatch;
           startH = parseInt(startH, 10);
@@ -586,21 +592,35 @@
           // Extraer el venue que está presente en la celda
           let venue = '';
           
-          // Detectar el venue en la celda
-          if (cellValue.includes('DRIFT')) venue = 'DRIFT';
-          else if (cellValue.includes('AZURE')) venue = 'AZURE';
-          else if (cellValue.includes('AURA')) venue = 'AURA';
-          else if (cellValue.includes('AMMOS')) venue = 'AMMOS';
-          else if (cellValue.includes('BAOLI')) venue = 'BAOLI';
-          
-          // Si no se detectó ningún venue, usar el texto de la celda para depuración
-          if (!venue) {
-            console.log(`No se detectó venue en la celda: "${cellValue}"`);
-            continue; // Saltar esta celda si no tiene venue
+          // Detectar el venue en la celda (mejorado para detectar mejor)
+          if (cellValue.toUpperCase().includes('DRIFT')) venue = 'DRIFT';
+          else if (cellValue.toUpperCase().includes('AZURE')) venue = 'AZURE';
+          else if (cellValue.toUpperCase().includes('AURA')) venue = 'AURA';
+          else if (cellValue.toUpperCase().includes('AMMOS')) venue = 'AMMOS';
+          else if (cellValue.toUpperCase().includes('BAOLI')) venue = 'BAOLI';
+          else {
+            // Si no se detectó ningún venue, asignar uno según el día de la semana
+            switch(dayIndex) {
+              case 1: // Lunes
+              case 2: // Martes
+              case 3: // Miércoles
+                venue = 'DRIFT';
+                break;
+              case 4: // Jueves
+              case 5: // Viernes
+              case 6: // Sábado
+              case 7: // Domingo
+                venue = 'AZURE';
+                break;
+              default:
+                venue = 'DRIFT';
+            }
+            console.log(`No se detectó venue explícito, asignando por día: ${venue}`);
           }
           
           // Obtener todas las fechas para este día de la semana en el mes actual
           const dates = getAllDatesForDayInMonth(dayIndex, currentMonth, currentYear, currentDay);
+          console.log(`Fechas encontradas para día ${dayIndex}:`, dates.map(d => d.toDateString()));
           
           // Crear un evento para cada fecha
           dates.forEach(date => {
@@ -611,8 +631,14 @@
               venue: venue
             });
           });
+          
+          console.log(`Evento añadido para ${djName} en ${venue}, ${startTime}-${endTime}`);
+        } else {
+          console.log(`La celda no contiene un formato de horario válido`);
         }
       }
+      
+      console.log(`Total de eventos encontrados para ${djName}: ${events.length}`);
     }
     
     // Función para formatear fechas en formato iCalendar
