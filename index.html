@@ -583,8 +583,8 @@
           const startTime = `${startH}:${startM.toString().padStart(2, '0')}`;
           const endTime = `${endH}:${endM.toString().padStart(2, '0')}`;
           
-          // Extraer el venue si está presente
-          let venue = 'DRIFT'; // Valor predeterminado en caso de que no se detecte ninguno
+          // Extraer el venue que está presente en la celda
+          let venue = '';
           
           // Detectar el venue en la celda
           if (cellValue.includes('DRIFT')) venue = 'DRIFT';
@@ -592,6 +592,12 @@
           else if (cellValue.includes('AURA')) venue = 'AURA';
           else if (cellValue.includes('AMMOS')) venue = 'AMMOS';
           else if (cellValue.includes('BAOLI')) venue = 'BAOLI';
+          
+          // Si no se detectó ningún venue, usar el texto de la celda para depuración
+          if (!venue) {
+            console.log(`No se detectó venue en la celda: "${cellValue}"`);
+            continue; // Saltar esta celda si no tiene venue
+          }
           
           // Obtener todas las fechas para este día de la semana en el mes actual
           const dates = getAllDatesForDayInMonth(dayIndex, currentMonth, currentYear, currentDay);
