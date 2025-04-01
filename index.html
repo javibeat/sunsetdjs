@@ -499,55 +499,108 @@
       });
     });
 
-    // Add this missing function after the getAllRowsForDj function
-    function processRowForCalendar(row, djName, currentMonth, currentYear, currentDay, monthName, events) {
-      // Procesar cada día de la semana (columnas 1-7)
-      for (let dayIndex = 1; dayIndex <= 7; dayIndex++) {
-        const cellValue = row[dayIndex];
+    // Añadir estas funciones que faltan para el calendario
+    function createCalendarEvents(row, djName) {
+      console.log(`Creando eventos de calendario para ${djName}`, row);
+      
+      // Obtener fecha actual y mes
+      const now = new Date();
+      const currentMonth = now.getMonth();
+      const currentYear = now.getFullYear();
+      const currentDay = now.getDate();
+      
+      // Obtener nombre del mes para el archivo
+      const monthNames = [
+        'JANUARY', 'FEBRUARY', 'MARCH', 'APRIL', 
+        'MAY', 'JUNE', 'JULY', 'AUGUST',
+        'SEPTEMBER', 'OCTOBER', 'NOVEMBER', 'DECEMBER'
+      ];
+      const monthName = monthNames[currentMonth];
+      
+      // Array para almacenar todos los eventos
+      const events = [];
+      
+      // Procesar la fila para extraer eventos
+      processRowForCalendar(row, djName, currentMonth, currentYear, currentDay, monthName, events);
+      
+      // Generar y descargar el archivo ICS
+      if (events.length > 0) {
+        generateICSFile(djName, events);
+      } else {
+        alert(`No se encontraron horarios para ${djName} en el mes actual.`);
+      }
+    }
+    
+    // Función para obtener todas las fechas de un día específico en el mes actual
+    function getAllDatesForDayInMonth(dayOfWeek, month, year, currentDay) {
+      const dates = [];
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+      
+      // Convertir dayOfWeek de formato tabla (1=lunes, 7=domingo) a formato JS (0=domingo, 6=sábado)
+      const jsDayOfWeek = dayOfWeek === 7 ? 0 : dayOfWeek;
+      
+      // Recorrer todos los días del mes
+      for (let day = 1; day <= daysInMonth; day++) {
+        const date = new Date(year, month, day);
         
-        // Ignorar celdas vacías o con guiones
-        if (!cellValue || cellValue === '—') continue;
-        
-        // Verificar si la celda contiene un horario (formato: "1-5" o "1:30-5:30")
-        const timeMatch = cellValue.match(/(\d+)(?::(\d+))?\s*-\s*(\d+)(?::(\d+))?/);
-        
-        if (timeMatch) {
-          // Extraer horas y minutos
-          let [, startH, startM, endH, endM] = timeMatch;
-          startH = parseInt(startH, 10);
-          endH = parseInt(endH, 10);
-          startM = parseInt(startM || '0', 10);
-          endM = parseInt(endM || '0', 10);
-          
-          // Convertir a formato 24h (asumiendo PM para horarios de DJ)
-          if (startH < 12) startH += 12;
-          if (endH < 12) endH += 12;
-          
-          // Formatear los horarios
-          const startTime = `${startH}:${startM.toString().padStart(2, '0')}`;
-          const endTime = `${endH}:${endM.toString().padStart(2, '0')}`;
-          
-          // Extraer el venue si está presente
-          let venue = 'Unknown Venue';
-          if (cellValue.includes('DRIFT')) venue = 'DRIFT';
-          else if (cellValue.includes('AZURE')) venue = 'AZURE';
-          else if (cellValue.includes('AURA')) venue = 'AURA';
-          else if (cellValue.includes('AMMOS')) venue = 'AMMOS';
-          else if (cellValue.includes('BAOLI')) venue = 'BAOLI';
-          
-          // Obtener todas las fechas para este día de la semana en el mes actual
-          const dates = getAllDatesForDayInMonth(dayIndex, currentMonth, currentYear, currentDay);
-          
-          // Crear un evento para cada fecha
-          dates.forEach(date => {
-            events.push({
-              date: date,
-              startTime: startTime,
-              endTime: endTime,
-              venue: venue
-            });
-          });
+        // Si el día de la semana coincide, añadir la fecha
+        if (date.getDay() === jsDayOfWeek) {
+          // Solo incluir fechas futuras o el día actual
+          if (day >= currentDay || month > new Date().getMonth()) {
+            dates.push(new Date(year, month, day));
+          }
         }
+      }
+      
+      return dates;
+    }
+    
+    // Procesar cada día de la semana (columnas 1-7)
+    for (let dayIndex = 1; dayIndex <= 7; dayIndex++) {
+      const cellValue = row[dayIndex];
+      
+      // Ignorar celdas vacías o con guiones
+      if (!cellValue || cellValue === '—') continue;
+      
+      // Verificar si la celda contiene un horario (formato: "1-5" o "1:30-5:30")
+      const timeMatch = cellValue.match(/(\d+)(?::(\d+))?\s*-\s*(\d+)(?::(\d+))?/);
+      
+      if (timeMatch) {
+        // Extraer horas y minutos
+        let [, startH, startM, endH, endM] = timeMatch;
+        startH = parseInt(startH, 10);
+        endH = parseInt(endH, 10);
+        startM = parseInt(startM || '0', 10);
+        endM = parseInt(endM || '0', 10);
+        
+        // Convertir a formato 24h (asumiendo PM para horarios de DJ)
+        if (startH < 12) startH += 12;
+        if (endH < 12) endH += 12;
+        
+        // Formatear los horarios
+        const startTime = `${startH}:${startM.toString().padStart(2, '0')}`;
+        const endTime = `${endH}:${endM.toString().padStart(2, '0')}`;
+        
+        // Extraer el venue si está presente
+        let venue = 'Unknown Venue';
+        if (cellValue.includes('DRIFT')) venue = 'DRIFT';
+        else if (cellValue.includes('AZURE')) venue = 'AZURE';
+        else if (cellValue.includes('AURA')) venue = 'AURA';
+        else if (cellValue.includes('AMMOS')) venue = 'AMMOS';
+        else if (cellValue.includes('BAOLI')) venue = 'BAOLI';
+        
+        // Obtener todas las fechas para este día de la semana en el mes actual
+        const dates = getAllDatesForDayInMonth(dayIndex, currentMonth, currentYear, currentDay);
+        
+        // Crear un evento para cada fecha
+        dates.forEach(date => {
+          events.push({
+            date: date,
+            startTime: startTime,
+            endTime: endTime,
+            venue: venue
+          });
+        });
       }
     }
     
@@ -581,62 +634,32 @@
       downloadICSFile(djName, icsContent.join('\r\n')); // Usar CRLF según especificación iCalendar
     }
 
-    // El resto de las funciones permanecen igual
-    function downloadICSFile(djName, content) {
-      const blob = new Blob([content], { type: 'text/calendar;charset=utf-8' });
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      
-      // Obtener el mes actual para el nombre del archivo
-      const monthName = document.getElementById('current-month').textContent || 'APRIL';
-      link.download = `${djName}_Schedule_${monthName}.ics`;
-      
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
-    }
-
-    // Formato para fecha de inicio/fin de evento
-    function formatICSDate(date, timeStr) {
-      // Extraer horas y minutos del string de tiempo
-      let hours = 0, minutes = 0;
-      
-      // Manejar formatos como "1:30 - 5:30 pm" o "7:30 - 11 pm"
-      if (timeStr.toLowerCase().includes('pm') || timeStr.toLowerCase().includes('am')) {
-        const [time, period] = timeStr.split(/\s+(AM|PM)/i);
-        let [h, m = '00'] = time.split(':');
-        hours = parseInt(h);
-        minutes = parseInt(m);
+    // Arreglar el botón de compartir
+    document.getElementById('shareButton').addEventListener('click', async () => {
+      try {
+        const url = window.location.href;
+        const monthText = document.getElementById('current-month').textContent;
         
-        // Ajustar para PM
-        if (period && period.toLowerCase() === 'pm' && hours < 12) hours += 12;
-        if (period && period.toLowerCase() === 'am' && hours === 12) hours = 0;
-      } else {
-        // Manejar formatos como "1:30" o "7"
-        let [h, m = '00'] = timeStr.split(':');
-        hours = parseInt(h);
-        minutes = parseInt(m);
-        
-        // Asumir que todos son PM si es después de mediodía
-        if (hours < 12) hours += 12;
+        await navigator.share({
+          title: 'DJ Schedule',
+          text: `Mira el horario de DJs para ${monthText}`,
+          url: url
+        });
+      } catch (err) {
+        console.error('Error al compartir:', err);
+        navigator.clipboard.writeText(window.location.href);
+        alert('¡Enlace copiado al portapapeles!');
       }
-      
-      // Crear una nueva fecha con las horas y minutos correctos
-      const eventDate = new Date(date);
-      eventDate.setHours(hours, minutes, 0, 0);
-      
-      // Formatear según especificación iCalendar
-      return eventDate.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
-    }
-
-    // Formato específico para la propiedad UNTIL en RRULE
-    function formatICSDateForUntil(date) {
-      // Establecer la hora a 23:59:59 para incluir todo el último día
-      date.setHours(23, 59, 59, 0);
-      return date.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
-    }
+    });
+    
+    // Cerrar el menú hamburguesa cuando se hace clic en un enlace
+    // Modificamos este selector para excluir el botón de VENUES
+    document.querySelectorAll('.nav-link:not(.venues-toggle)').forEach(link => {
+      link.addEventListener('click', () => {
+        hamburger.classList.remove('active');
+        navMenu.classList.remove('active');
+      });
+    });
   </script>
 </body>
 </html>
