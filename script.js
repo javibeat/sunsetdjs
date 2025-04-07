@@ -309,11 +309,14 @@ function processSpecialEvents(events) {
         ${dateStr} (${dayNames[eventDayOfWeek]})
       </div>
       <div class="event-details">
-        <strong>${venue}</strong> ${dj ? `- ${dj}` : ''}
+        <strong>${venue}</strong>
         <p class="event-info">
           ${time ? `<span class="event-time">🕒 ${time}</span>` : ''}
           ${description ? `<span class="event-description">📝 ${description}</span>` : ''}
-          <span class="dj-status">👤 ${dj ? (djRequired === 'Yes' ? 'DJ must attend' : 'DJ not required') : 'No DJ assigned'}</span>
+          <span class="dj-status">👤 ${djRequired === 'Yes' ? 
+            `DJ must attend (${dj})` : 
+            dj ? `DJ not required (${dj})` : 
+            'No DJ assigned'}</span>
         </p>
       </div>
     `;
