@@ -430,7 +430,6 @@ function createCalendarEvents(row, djName) {
   }
   
   if (events.length > 0) {
-    // Crear el contenido del archivo ICS
     const icsContent = [
       'BEGIN:VCALENDAR',
       'VERSION:2.0',
@@ -440,26 +439,30 @@ function createCalendarEvents(row, djName) {
       'END:VCALENDAR'
     ].join('\n');
 
-    // Crear el blob con el contenido completo del calendario
-    const calendarFile = new Blob(
-      [icsContent],
-      { type: 'text/calendar;charset=utf-8' }
-    );
+    // Detectar si es iOS
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
     
     try {
-      // Crear y simular el clic en el enlace de descarga
-      const link = document.createElement('a');
-      link.href = window.URL.createObjectURL(calendarFile);
-      link.download = `${djName}_${monthName}_Schedule.ics`;
-      link.style.display = 'none';
-      document.body.appendChild(link);
-      link.click();
-      
-      // Limpiar después de la descarga
-      setTimeout(() => {
-        document.body.removeChild(link);
-        window.URL.revokeObjectURL(link.href);
-      }, 100);
+      if (isIOS) {
+        // Crear un Blob y usar webcal para iOS
+        const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
+        const blobUrl = window.URL.createObjectURL(blob);
+        window.location.href = blobUrl.replace('blob:', 'webcal:');
+      } else {
+        // Mantener la descarga normal para otros dispositivos
+        const calendarFile = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
+        const link = document.createElement('a');
+        link.href = window.URL.createObjectURL(calendarFile);
+        link.download = `${djName}_${monthName}_Schedule.ics`;
+        link.style.display = 'none';
+        document.body.appendChild(link);
+        link.click();
+        
+        setTimeout(() => {
+          document.body.removeChild(link);
+          window.URL.revokeObjectURL(link.href);
+        }, 100);
+      }
     } catch (error) {
       console.error('Error creating calendar file:', error);
       alert('There was an error creating the calendar file. Please try again.');
