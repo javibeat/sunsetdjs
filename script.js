@@ -430,17 +430,40 @@ function createCalendarEvents(row, djName) {
   }
   
   if (events.length > 0) {
+    // Crear el contenido del archivo ICS
+    const icsContent = [
+      'BEGIN:VCALENDAR',
+      'VERSION:2.0',
+      'PRODID:-//SunsetDJs//Schedule//EN',
+      'CALSCALE:GREGORIAN',
+      ...events,
+      'END:VCALENDAR'
+    ].join('\n');
+
+    // Crear el blob con el contenido completo del calendario
     const calendarFile = new Blob(
-      [events.join('\n')],
+      [icsContent],
       { type: 'text/calendar;charset=utf-8' }
     );
     
-    const link = document.createElement('a');
-    link.href = window.URL.createObjectURL(calendarFile);
-    link.download = `${djName}_${monthName}_Schedule.ics`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    try {
+      // Crear y simular el clic en el enlace de descarga
+      const link = document.createElement('a');
+      link.href = window.URL.createObjectURL(calendarFile);
+      link.download = `${djName}_${monthName}_Schedule.ics`;
+      link.style.display = 'none';
+      document.body.appendChild(link);
+      link.click();
+      
+      // Limpiar después de la descarga
+      setTimeout(() => {
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(link.href);
+      }, 100);
+    } catch (error) {
+      console.error('Error creating calendar file:', error);
+      alert('There was an error creating the calendar file. Please try again.');
+    }
   }
 }
 
@@ -499,6 +522,8 @@ function createICSEvent(djName, venue, date, startH, startM, endH, endM) {
     `DTEND:${formatDate(endDate)}`,
     `SUMMARY:${djName} @ ${venue}`,
     `LOCATION:${venue}`,
+    'DESCRIPTION:DJ Schedule for ' + djName,
+    `UID:${Date.now()}-${Math.random().toString(36).substring(2)}@sunsetdjs`,
     'END:VEVENT'
   ].join('\n');
 }
