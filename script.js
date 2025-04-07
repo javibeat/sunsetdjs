@@ -444,10 +444,10 @@ function createCalendarEvents(row, djName) {
     
     try {
       if (isIOS) {
-        // Crear un Blob y usar webcal para iOS
-        const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
-        const blobUrl = window.URL.createObjectURL(blob);
-        window.location.href = blobUrl.replace('blob:', 'webcal:');
+        // Crear un data URI para iOS
+        const base64Content = btoa(unescape(encodeURIComponent(icsContent)));
+        const dataURI = `data:text/calendar;charset=utf-8;base64,${base64Content}`;
+        window.location.href = dataURI;
       } else {
         // Mantener la descarga normal para otros dispositivos
         const calendarFile = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
