@@ -1,0 +1,30 @@
+/* Estilos específicos para la columna fija en dispositivos móviles */
+@media (max-width: 768px) {
+  #schedule-container {
+    overflow-x: auto !important;
+    position: relative !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+  
+  #schedule-table th:first-child,
+  #schedule-table td:first-child {
+    position: -webkit-sticky !important;
+    position: sticky !important;
+    left: 0 !important;
+    z-index: 10 !important;
+  }
+  
+  #schedule-table th:first-child {
+    background-color: #0066cc !important;
+    z-index: 11 !important;
+  }
+  
+  #schedule-table td:first-child {
+    background-color: white !important;
+    box-shadow: 5px 0 10px -5px rgba(0,0,0,0.15) !important;
+  }
+  
+  #schedule-table tr:nth-child(even) td:first-child {
+    background-color: rgba(0, 102, 204, 0.05) !important;
+  }
+}

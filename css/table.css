@@ -96,3 +96,40 @@ td.evening-shift {
   background-color: #cce5ff;
   color: #1d1d1f;
 }
+
+
+/* Añadir estos estilos al final del archivo table.css */
+#schedule-container {
+  overflow-x: auto;
+  position: relative;
+}
+
+/* Solución para columna fija con mayor especificidad */
+#schedule-table th:first-child,
+#schedule-table td:first-child {
+  position: -webkit-sticky !important;
+  position: sticky !important;
+  left: 0 !important;
+  z-index: 10 !important;
+}
+
+#schedule-table th:first-child {
+  background-color: #0066cc !important;
+  z-index: 11 !important;
+}
+
+#schedule-table td:first-child {
+  background-color: white !important;
+  box-shadow: 5px 0 10px -5px rgba(0,0,0,0.15) !important;
+}
+
+/* Asegurar que los fondos se mantengan correctos */
+tr:nth-child(even) td:first-child {
+  background-color: rgba(0, 102, 204, 0.05) !important;
+}
+
+/* Forzar el comportamiento de scroll */
+#schedule-container {
+  overflow-x: scroll !important;
+  -webkit-overflow-scrolling: touch !important;
+}

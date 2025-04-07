@@ -3,6 +3,7 @@ document.addEventListener('DOMContentLoaded', () => {
   fetchSchedule()
     .then(() => {
       console.log('Horario cargado correctamente, ahora cargando eventos especiales...');
+      setupStickyColumn(); // Aplicar columna fija después de cargar la tabla
       setTimeout(() => {
         fetchSpecialEvents();
       }, 2000);
@@ -501,3 +502,57 @@ function createICSEvent(djName, venue, date, startH, startM, endH, endM) {
     'END:VEVENT'
   ].join('\n');
 }
+
+// Función para manejar la columna fija en móvil
+function setupStickyColumn() {
+  // Solo aplicar en dispositivos móviles
+  if (window.innerWidth <= 768) {
+    const table = document.getElementById('schedule-table');
+    if (!table) return;
+    
+    // Asegurarse de que la primera columna tenga el estilo correcto
+    const firstColumnCells = table.querySelectorAll('th:first-child, td:first-child');
+    
+    firstColumnCells.forEach(cell => {
+      cell.style.position = 'sticky';
+      cell.style.left = '0';
+      cell.style.zIndex = cell.tagName === 'TH' ? '3' : '2';
+      
+      // Aplicar estilos específicos según el tipo de celda
+      if (cell.tagName === 'TH') {
+        cell.style.backgroundColor = '#0066cc';
+        cell.style.color = 'white';
+      } else {
+        cell.style.backgroundColor = 'white';
+        cell.style.boxShadow = '2px 0 5px rgba(0,0,0,0.1)';
+      }
+    });
+    
+    // Asegurar que el contenedor tenga overflow-x
+    const container = document.getElementById('schedule-container');
+    if (container) {
+      container.style.overflowX = 'auto';
+      container.style.position = 'relative';
+      container.style.webkitOverflowScrolling = 'touch';
+    }
+  }
+}
+
+// Ejecutar cuando el DOM esté listo y después de cargar la tabla
+document.addEventListener('DOMContentLoaded', () => {
+  updateCurrentMonth();
+  fetchSchedule()
+    .then(() => {
+      console.log('Horario cargado correctamente, ahora cargando eventos especiales...');
+      setupStickyColumn(); // Aplicar columna fija después de cargar la tabla
+      setTimeout(() => {
+        fetchSpecialEvents();
+      }, 2000);
+    })
+    .catch(error => {
+      console.error('Error en fetchSchedule:', error);
+    });
+});
+
+// También ejecutar cuando cambie el tamaño de la ventana
+window.addEventListener('resize', setupStickyColumn);
