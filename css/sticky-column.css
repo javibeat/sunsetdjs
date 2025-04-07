@@ -11,20 +11,30 @@
     position: -webkit-sticky !important;
     position: sticky !important;
     left: 0 !important;
-    z-index: 10 !important;
+    z-index: 999 !important;
+    background-color: white !important;
   }
   
   #schedule-table th:first-child {
     background-color: #0066cc !important;
-    z-index: 11 !important;
+    z-index: 1000 !important;
   }
   
+  /* Forzar fondo blanco en TODAS las celdas de la primera columna */
   #schedule-table td:first-child {
     background-color: white !important;
     box-shadow: 5px 0 10px -5px rgba(0,0,0,0.15) !important;
   }
   
-  #schedule-table tr:nth-child(even) td:first-child {
-    background-color: rgba(0, 102, 204, 0.05) !important;
+  /* Asegurar que TODOS los estados posibles tengan fondo blanco */
+  #schedule-table tr td:first-child,
+  #schedule-table tr:nth-child(even) td:first-child,
+  #schedule-table tr:nth-child(odd) td:first-child,
+  #schedule-table tr:hover td:first-child,
+  #schedule-table td.current-shift:first-child,
+  #schedule-table td.special-event-cell:first-child,
+  #schedule-table td.morning-shift:first-child,
+  #schedule-table td.evening-shift:first-child {
+    background-color: white !important;
   }
 }

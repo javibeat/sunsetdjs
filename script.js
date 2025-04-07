@@ -503,55 +503,57 @@ function createICSEvent(djName, venue, date, startH, startM, endH, endM) {
   ].join('\n');
 }
 
-// Función para manejar la columna fija en móvil
+// Añadir esta función al principio del archivo script.js
 function setupStickyColumn() {
-  // Solo aplicar en dispositivos móviles
   if (window.innerWidth <= 768) {
-    const table = document.getElementById('schedule-table');
-    if (!table) return;
+    console.log("Aplicando columna fija en móvil");
     
-    // Asegurarse de que la primera columna tenga el estilo correcto
-    const firstColumnCells = table.querySelectorAll('th:first-child, td:first-child');
-    
-    firstColumnCells.forEach(cell => {
-      cell.style.position = 'sticky';
-      cell.style.left = '0';
-      cell.style.zIndex = cell.tagName === 'TH' ? '3' : '2';
-      
-      // Aplicar estilos específicos según el tipo de celda
-      if (cell.tagName === 'TH') {
-        cell.style.backgroundColor = '#0066cc';
-        cell.style.color = 'white';
-      } else {
-        cell.style.backgroundColor = 'white';
-        cell.style.boxShadow = '2px 0 5px rgba(0,0,0,0.1)';
+    // Forzar estilos directamente en el DOM
+    const styleElement = document.createElement('style');
+    styleElement.textContent = `
+      @media (max-width: 768px) {
+        #schedule-container {
+          position: relative !important;
+          overflow: hidden !important;
+          max-width: 100% !important;
+        }
+        
+        #schedule-table {
+          display: block !important;
+          overflow-x: auto !important;
+          white-space: nowrap !important;
+        }
+        
+        #schedule-table th:first-child,
+        #schedule-table td:first-child {
+          position: sticky !important;
+          left: 0 !important;
+          z-index: 999 !important;
+        }
+        
+        #schedule-table th:first-child {
+          background-color: #0066cc !important;
+        }
+        
+        #schedule-table td:first-child {
+          background-color: white !important;
+          box-shadow: 5px 0 10px -5px rgba(0,0,0,0.3) !important;
+        }
+        
+        #schedule-table tr:nth-child(even) td:first-child {
+          background-color: rgba(0, 102, 204, 0.05) !important;
+        }
       }
-    });
+    `;
+    document.head.appendChild(styleElement);
     
-    // Asegurar que el contenedor tenga overflow-x
-    const container = document.getElementById('schedule-container');
-    if (container) {
-      container.style.overflowX = 'auto';
-      container.style.position = 'relative';
-      container.style.webkitOverflowScrolling = 'touch';
-    }
+    console.log("Estilos inyectados directamente en el DOM");
   }
 }
 
-// Ejecutar cuando el DOM esté listo y después de cargar la tabla
-document.addEventListener('DOMContentLoaded', () => {
-  updateCurrentMonth();
-  fetchSchedule()
-    .then(() => {
-      console.log('Horario cargado correctamente, ahora cargando eventos especiales...');
-      setupStickyColumn(); // Aplicar columna fija después de cargar la tabla
-      setTimeout(() => {
-        fetchSpecialEvents();
-      }, 2000);
-    })
-    .catch(error => {
-      console.error('Error en fetchSchedule:', error);
-    });
+// Asegurarse de que se llame después de cargar la tabla
+window.addEventListener('DOMContentLoaded', () => {
+  console.log("DOM cargado, esperando a cargar la tabla");
 });
 
 // También ejecutar cuando cambie el tamaño de la ventana

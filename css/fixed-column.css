@@ -1,0 +1,86 @@
+/* Solución radical para columna fija en móvil */
+@media (max-width: 768px) {
+  /* Contenedor principal */
+  #schedule-container {
+    position: relative !important;
+    overflow: hidden !important;
+    max-width: 100% !important;
+    margin: 2rem 0 !important;
+  }
+  
+  /* Contenedor interno con scroll */
+  #schedule-container::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100px; /* Ancho aproximado de la primera columna */
+    height: 100%;
+    background: transparent;
+    z-index: 200;
+    pointer-events: none;
+  }
+  
+  /* Tabla con scroll horizontal */
+  #schedule-table {
+    display: block !important;
+    overflow-x: auto !important;
+    white-space: nowrap !important;
+    border-collapse: separate !important;
+    border-spacing: 0 !important;
+    width: 100% !important;
+  }
+  
+  /* Columna fija */
+  #schedule-table th:first-child,
+  #schedule-table td:first-child {
+    position: sticky !important;
+    left: 0 !important;
+    min-width: 100px !important;
+    max-width: 100px !important;
+    width: 100px !important;
+  }
+  
+  /* Estilos específicos para la cabecera */
+  #schedule-table th:first-child {
+    z-index: 300 !important;
+    background-color: #0066cc !important;
+    color: white !important;
+  }
+  
+  /* Estilos específicos para las celdas */
+  #schedule-table td:first-child {
+    z-index: 200 !important;
+    background-color: white !important;
+    box-shadow: 5px 0 10px -5px rgba(0,0,0,0.3) !important;
+  }
+  
+  /* Filas alternadas */
+  #schedule-table tr:nth-child(even) td:first-child {
+    background-color: rgba(0, 102, 204, 0.05) !important;
+  }
+  
+  /* Asegurar que los estilos de eventos especiales no interfieran */
+  #schedule-table td.current-shift:first-child {
+    position: sticky !important;
+    left: 0 !important;
+    z-index: 200 !important;
+  }
+  
+  /* Forzar que todas las celdas tengan un ancho mínimo */
+  #schedule-table th,
+  #schedule-table td {
+    min-width: 100px !important;
+  }
+  
+  /* Eliminar cualquier propiedad que pueda interferir */
+  #schedule-table,
+  #schedule-table thead,
+  #schedule-table tbody,
+  #schedule-table tr {
+    transform: none !important;
+    perspective: none !important;
+    backface-visibility: visible !important;
+    will-change: auto !important;
+  }
+}

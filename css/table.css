@@ -118,14 +118,22 @@ td.evening-shift {
   z-index: 11 !important;
 }
 
+/* Simplificar: todas las celdas de DJ con fondo blanco */
 #schedule-table td:first-child {
   background-color: white !important;
   box-shadow: 5px 0 10px -5px rgba(0,0,0,0.15) !important;
 }
 
-/* Asegurar que los fondos se mantengan correctos */
-tr:nth-child(even) td:first-child {
-  background-color: rgba(0, 102, 204, 0.05) !important;
+/* Eliminar estilos alternados para la primera columna */
+#schedule-table tr:nth-child(even) td:first-child {
+  background-color: white !important;
+}
+
+/* Asegurar que los estados especiales también tengan fondo blanco */
+#schedule-table tr:hover td:first-child,
+#schedule-table td.current-shift:first-child,
+#schedule-table td.special-event-cell:first-child {
+  background-color: white !important;
 }
 
 /* Forzar el comportamiento de scroll */
