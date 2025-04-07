@@ -6,8 +6,9 @@
     -webkit-overflow-scrolling: touch !important;
   }
   
-  #schedule-table th:first-child,
-  #schedule-table td:first-child {
+  /* Aumentar especificidad para la columna fija */
+  body #schedule-table th:first-child,
+  body #schedule-table td:first-child {
     position: -webkit-sticky !important;
     position: sticky !important;
     left: 0 !important;
@@ -15,26 +16,26 @@
     background-color: white !important;
   }
   
-  #schedule-table th:first-child {
+  body #schedule-table th:first-child {
     background-color: #0066cc !important;
     z-index: 1000 !important;
   }
   
-  /* Forzar fondo blanco en TODAS las celdas de la primera columna */
-  #schedule-table td:first-child {
+  /* Forzar fondo blanco con mayor especificidad */
+  body #schedule-table tbody tr td:first-child {
     background-color: white !important;
     box-shadow: 5px 0 10px -5px rgba(0,0,0,0.15) !important;
   }
   
-  /* Asegurar que TODOS los estados posibles tengan fondo blanco */
-  #schedule-table tr td:first-child,
-  #schedule-table tr:nth-child(even) td:first-child,
-  #schedule-table tr:nth-child(odd) td:first-child,
-  #schedule-table tr:hover td:first-child,
-  #schedule-table td.current-shift:first-child,
-  #schedule-table td.special-event-cell:first-child,
-  #schedule-table td.morning-shift:first-child,
-  #schedule-table td.evening-shift:first-child {
+  /* Sobrescribir todos los estados con máxima especificidad */
+  body #schedule-table tbody tr td:first-child,
+  body #schedule-table tbody tr:nth-child(even) td:first-child,
+  body #schedule-table tbody tr:nth-child(odd) td:first-child,
+  body #schedule-table tbody tr:hover td:first-child,
+  body #schedule-table tbody td.current-shift:first-child,
+  body #schedule-table tbody td.special-event-cell:first-child,
+  body #schedule-table tbody td.morning-shift:first-child,
+  body #schedule-table tbody td.evening-shift:first-child {
     background-color: white !important;
   }
 }
