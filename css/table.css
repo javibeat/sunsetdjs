@@ -1,0 +1,98 @@
+#schedule-container {
+  overflow-x: auto;
+  margin: 2rem 0;
+  border-radius: 18px;
+  background: white;
+  box-shadow: 0 4px 24px rgba(0, 102, 204, 0.08);
+  position: relative;
+}
+
+table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  background: white;
+  border-radius: 18px;
+  overflow: hidden;
+}
+
+th, td {
+  padding: 1rem;
+  text-align: center;
+  border: 1px solid rgba(0, 102, 204, 0.1);
+  min-width: 100px;
+  background: white;
+  color: #0066cc;
+  font-weight: 500;
+}
+
+th {
+  background: #0066cc;
+  color: white;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-size: 0.9rem;
+}
+
+td:first-child {
+  background: rgba(0, 102, 204, 0.05);
+  color: #0066cc;
+  font-weight: 500;
+}
+
+tr:nth-child(even) td {
+  background: rgba(0, 102, 204, 0.02);
+}
+
+tr:hover td {
+  background: rgba(0, 102, 204, 0.05);
+  transition: background 0.3s ease;
+}
+
+tr.venues-row th {
+  background: rgba(0, 102, 204, 0.7);
+  color: white;
+}
+
+td:empty {
+  border: 1px solid rgba(0, 102, 204, 0.1);
+  background: white;
+  min-width: 100px;
+  height: 30px;
+}
+
+/* Current shift styles */
+td.current-shift {
+  background-color: #4CAF50 !important;
+  color: white !important;
+  font-weight: bold !important;
+  border: 2px solid #2E7D32 !important;
+  box-shadow: 0 0 8px rgba(76, 175, 80, 0.4);
+}
+
+td.next-shift {
+  background-color: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+/* Override other table styles for current shift */
+tr:hover td.current-shift,
+tr:nth-child(even) td.current-shift {
+  background-color: #4CAF50 !important;
+  color: white !important;
+}
+
+tr.current-day td {
+  background-color: rgba(76, 175, 80, 0.1) !important;
+}
+
+td.morning-shift {
+  background-color: #ffeeba;
+  color: #1d1d1f;
+}
+
+td.evening-shift {
+  background-color: #cce5ff;
+  color: #1d1d1f;
+}

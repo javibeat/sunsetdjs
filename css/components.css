@@ -1,0 +1,75 @@
+.share-container {
+  display: flex;
+  justify-content: center;
+  margin: 20px 0;
+}
+
+.share-button {
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 16px;
+}
+
+.share-button:hover {
+  background-color: #45a049;
+}
+
+.calendar-btn {
+  background: none;
+  border: none;
+  color: #4a90e2;
+  cursor: pointer;
+  padding: 4px;
+  margin-left: 8px;
+  transition: color 0.3s ease;
+  font-size: 1.2rem;
+}
+
+.calendar-btn:hover {
+  color: #357abd;
+}
+
+.calendar-btn i {
+  font-size: 0.9em;
+}
+
+.schedule-legend {
+  margin: 20px auto;
+  padding: 15px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 24px rgba(0, 102, 204, 0.08);
+  max-width: 800px;
+}
+
+.legend-title {
+  font-weight: 600;
+  margin-bottom: 15px;
+  color: #1d1d1f;
+}
+
+.legend-items {
+  display: flex;
+  justify-content: space-around;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.legend-indicator {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+}
