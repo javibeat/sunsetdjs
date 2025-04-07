@@ -589,119 +589,109 @@ td.special-event-cell.current-shift {
   background-color: rgba(0, 102, 204, 0.1);
 }
 
-/* Eliminar estos estilos duplicados que causan conflictos */
-/* Ajustes para móvil */
-@media (max-width: 768px) {
-  /* Eliminar esta regla duplicada que causa conflictos */
-  /*.venues-submenu {
-    position: static;
-    box-shadow: none;
-    padding-left: 20px;
-    background-color: transparent;
-  }*/
+/* Schedule Legend */
+.schedule-legend {
+  margin: 20px auto;
+  padding: 15px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 24px rgba(0, 102, 204, 0.08);
+  max-width: 800px;
 }
 
-/* Estilos para la tabla con columna fija en móvil */
-@media (max-width: 768px) {
-  #schedule-table {
-    table-layout: fixed;
-    width: 100%;
-    display: block;
-    overflow-x: auto;
-  }
-  
-  #schedule-table thead th:first-child,
-  #schedule-table tbody td:first-child {
-    position: sticky;
-    left: 0;
-    background-color: #f8f9fa;
-    z-index: 1;
-    box-shadow: 2px 0 5px rgba(0,0,0,0.1);
-  }
-  
-  #schedule-table thead th:first-child {
-    background-color: #0275d8;
-    color: white;
-  }
-  
-  /* Asegurar que la columna fija tenga un ancho adecuado */
-  #schedule-table th:first-child,
-  #schedule-table td:first-child {
-    min-width: 80px;
-    max-width: 100px;
-  }
+.legend-title {
+  font-weight: 600;
+  margin-bottom: 15px;
+  color: #1d1d1f;
 }
 
-/* Ajustes globales para los días de la semana */
-#schedule-table thead th {
-  white-space: nowrap;
-  font-size: 0.85rem; /* Tamaño base más legible */
-  overflow: visible;
+.legend-items {
+  display: flex;
+  justify-content: space-around;
+  flex-wrap: wrap;
+  gap: 20px;
 }
 
-/* Ajustes específicos para tablet en modo horizontal */
-@media (min-width: 769px) and (max-width: 1024px) and (orientation: landscape) {
-  #schedule-table {
-    width: 100%;
-    table-layout: fixed;
-    overflow-x: visible;
-    border-radius: 18px;
-    overflow: hidden;
-  }
-  
-  #schedule-table th,
-  #schedule-table td {
-    padding: 0.6rem 0.4rem;
-    font-size: 0.85rem;
-    min-width: unset;
-    width: 12.5%; /* 100% / 8 columnas (1 para DJ + 7 días) */
-  }
-  
-  /* Ajuste específico para los días de la semana */
-  #schedule-table thead th {
-    font-size: 0.7rem; /* Ligeramente más grande que antes */
-    padding: 0.6rem 0.2rem;
-    letter-spacing: 0;
-  }
-  
-  #schedule-container {
-    overflow-x: visible;
-    border-radius: 18px;
-  }
-  
-  /* Reducir el ancho mínimo para todas las celdas */
-  td, th {
-    min-width: unset !important;
-  }
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
-/* Ajustes para móvil para los días de la semana */
-@media (max-width: 768px) {
-  /* Ajuste específico para los días de la semana en móvil */
-  #schedule-table thead th {
-    font-size: 0.7rem; /* Más grande para mejor legibilidad en móvil */
-    padding: 0.6rem 0.15rem;
-    letter-spacing: 0;
-  }
+.legend-indicator {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
 }
 
-/* Ajustes para escritorio para evitar scroll horizontal */
-@media (min-width: 1025px) {
-  #schedule-table {
-    width: 100%;
-    table-layout: fixed;
-    border-radius: 18px;
-    overflow: hidden;
-  }
-  
-  #schedule-table th,
-  #schedule-table td {
-    min-width: unset;
-    width: 12.5%; /* 100% / 8 columnas (1 para DJ + 7 días) */
-  }
-  
-  #schedule-container {
-    overflow-x: visible;
-    border-radius: 18px;
-  }
+.current-shift-indicator {
+  background-color: #4CAF50;
+}
+
+.event-no-dj-indicator {
+  background-color: #f44336;
+}
+
+.event-with-dj-indicator {
+  background-color: #ff9800;
+}
+
+.event-info {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-top: 8px;
+  font-size: 0.9em;
+}
+
+.event-time, .event-description, .dj-status {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: #666;
+}
+
+.event-indicator.event-with-dj {
+  background-color: #ff9800;
+}
+
+.event-indicator.event-no-dj {
+  background-color: #f44336;
+}
+
+.dj-status {
+  font-weight: 500;
+  color: #1d1d1f;
+}
+
+/* Event Cells - Ajustando especificidad y prioridad */
+.special-event-cell {
+  position: relative;
+  background-color: rgba(244, 67, 54, 0.2) !important;
+  color: #f44336 !important;
+  border: 2px solid #f44336 !important;
+}
+
+.special-event-cell.dj-required {
+  background-color: rgba(255, 152, 0, 0.2) !important;
+  color: #ff9800 !important;
+  border: 2px solid #ff9800 !important;
+}
+
+/* Asegurando que los estilos se mantengan incluso con hover y otros estados */
+tr:hover td.special-event-cell.dj-required,
+tr:nth-child(even) td.special-event-cell.dj-required,
+td.special-event-cell.dj-required {
+  background-color: rgba(255, 152, 0, 0.2) !important;
+  color: #ff9800 !important;
+  border: 2px solid #ff9800 !important;
+}
+
+/* Indicadores de eventos */
+.special-event-cell .event-cell-indicator {
+  background-color: #f44336;
+}
+
+.special-event-cell.dj-required .event-cell-indicator {
+  background-color: #ff9800;
 }
