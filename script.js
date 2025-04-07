@@ -487,24 +487,36 @@ function processRowForCalendar(row, djName, currentMonth, currentYear, currentDa
         
         const venue = shift.split(' ')[0];
         
+        // Calcular todas las fechas del mes para este día de la semana
         const weekDay = dayIndex === 7 ? 0 : dayIndex;
-        const today = new Date(currentYear, currentMonth, currentDay);
-        const targetDay = new Date(today);
+        const firstDayOfMonth = new Date(currentYear, currentMonth, 1);
+        const lastDayOfMonth = new Date(currentYear, currentMonth + 1, 0);
         
-        const diff = weekDay - today.getDay();
-        targetDay.setDate(today.getDate() + diff);
+        // Encontrar el primer día del mes que coincide con este día de la semana
+        let targetDay = new Date(firstDayOfMonth);
+        while (targetDay.getDay() !== weekDay) {
+          targetDay.setDate(targetDay.getDate() + 1);
+        }
         
-        const event = createICSEvent(
-          djName,
-          venue,
-          targetDay,
-          startH,
-          startM,
-          endH,
-          endM
-        );
-        
-        events.push(event);
+        // Crear eventos para todas las ocurrencias de este día en el mes
+        while (targetDay <= lastDayOfMonth) {
+          // Solo crear eventos para días desde hoy hasta fin de mes
+          if (targetDay.getTime() >= new Date(currentYear, currentMonth, currentDay).getTime()) {
+            const event = createICSEvent(
+              djName,
+              venue,
+              new Date(targetDay),
+              startH,
+              startM,
+              endH,
+              endM
+            );
+            events.push(event);
+          }
+          
+          // Avanzar 7 días para la siguiente ocurrencia
+          targetDay.setDate(targetDay.getDate() + 7);
+        }
       }
     }
   }
