@@ -442,8 +442,8 @@
         `;
         legendContainer.appendChild(eventElement);
         
-        // Marcar en la tabla usando el índice de columna correcto
-        markSpecialEventInTable(tableColumnIndex, venue, dj);
+        // Marcar en la tabla usando el índice de columna correcto y el horario
+        markSpecialEventInTable(tableColumnIndex, venue, dj, time);
       });
       
       // Si no hay eventos en la leyenda, ocultar el contenedor
@@ -455,58 +455,65 @@
     }
     
     // Función para marcar eventos especiales en la tabla
-    function markSpecialEventInTable(dayOfWeek, venue, dj) {
+    function markSpecialEventInTable(dayOfWeek, venue, dj, time) {
       const table = document.getElementById('schedule-table');
       if (!table) {
         console.error('Tabla no encontrada');
         return;
       }
       
-      console.log(`Marcando evento especial: día ${dayOfWeek}, venue ${venue}, dj ${dj || 'cualquiera'}`);
+      console.log(`Marcando evento especial: día ${dayOfWeek}, venue ${venue}, dj ${dj || 'cualquiera'}, time ${time}`);
       
-      // Recorrer todas las filas de la tabla
       const rows = table.querySelectorAll('tbody tr');
-      console.log(`Encontradas ${rows.length} filas en la tabla`);
-      
-      // Marcar solo las celdas que contienen el venue específico
       let marked = false;
       
-      rows.forEach((row, index) => {
+      // Extraer el horario del evento desde la hoja de eventos
+      const eventTime = time || '';
+      const eventTimeMatch = eventTime.match(/(\d+)(?::(\d+))?\s*-\s*(\d+)(?::(\d+))?/);
+      
+      for (let i = 0; i < rows.length; i++) {
+        const row = rows[i];
         const cells = row.querySelectorAll('td');
-        if (cells.length < 8) return;
+        if (cells.length < 8) continue;
         
-        // Obtener la celda del día correspondiente
         const dayCell = cells[dayOfWeek];
-        if (!dayCell) return;
+        if (!dayCell) continue;
         
-        // Verificar si la celda contiene el venue específico
         const cellText = dayCell.textContent || '';
-        const venueToCheck = venue.toLowerCase();
         
-        // Comprobar si el texto de la celda contiene el venue (ignorando mayúsculas/minúsculas)
-        if (cellText.toLowerCase().includes(venueToCheck.toLowerCase())) {
-          // Marcar la celda
-          console.log(`Marcando celda en fila ${index}, día ${dayOfWeek} como evento especial (contiene ${venue})`);
+        // Si hay un DJ específico para el evento
+        if (dj && dj.trim() !== '') {
+          const djCell = cells[0];
+          const rowDjName = djCell ? djCell.textContent.replace(' (2)', '').trim() : '';
           
-          // Eliminar clases de turno actual
-          dayCell.classList.remove('current-shift');
-          dayCell.classList.remove('potential-current-shift');
-          
-          // Añadir clase de evento especial
-          dayCell.classList.add('special-event-cell');
-          dayCell.setAttribute('title', 'EVENT/No DJ needed');
-          
-          // Reemplazar el contenido con un mensaje claro
-          dayCell.innerHTML = `${venue} - EVENT <span class="event-cell-indicator"></span>`;
-          
-          marked = true;
+          // Verificar si coincide el DJ y el horario del evento
+          if (rowDjName.toLowerCase() === dj.toLowerCase() && eventTimeMatch) {
+            const cellTimeMatch = cellText.match(/(\d+)(?::(\d+))?\s*-\s*(\d+)(?::(\d+))?/);
+            if (cellTimeMatch && cellTimeMatch[0] === eventTimeMatch[0]) {
+              console.log(`Marcando slot específico para DJ ${dj} con horario ${eventTimeMatch[0]}`);
+              
+              dayCell.classList.remove('current-shift', 'potential-current-shift');
+              dayCell.classList.add('special-event-cell');
+              dayCell.setAttribute('title', 'EVENT/No DJ needed');
+              dayCell.innerHTML = `${venue} - EVENT <span class="event-cell-indicator"></span>`;
+              marked = true;
+            }
+          }
+        } else {
+          // Si no hay DJ, marcar todas las celdas del venue para ese día
+          if (cellText.toUpperCase().includes(venue.toUpperCase())) {
+            console.log(`Marcando celda del venue ${venue}: ${cellText}`);
+            
+            dayCell.classList.remove('current-shift', 'potential-current-shift');
+            dayCell.classList.add('special-event-cell');
+            dayCell.setAttribute('title', 'EVENT/No DJ needed');
+            dayCell.innerHTML = `${venue} - EVENT <span class="event-cell-indicator"></span>`;
+            marked = true;
+          }
         }
-      });
+      }
       
       console.log(`¿Se marcó alguna celda? ${marked}`);
-      
-      // Si no se marcó ninguna celda, NO crear una nueva fila
-      // Eliminamos esta parte del código para evitar crear filas adicionales
     }
     
     document.addEventListener('DOMContentLoaded', () => {
