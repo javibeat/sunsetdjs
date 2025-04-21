@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="css/components.css">
     <link rel="stylesheet" href="css/events.css">
     <link rel="stylesheet" href="css/mobile.css">
+  <link rel="stylesheet" href="css/sticky-column.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap" rel="stylesheet">
 </head>
@@ -54,6 +55,24 @@
         </thead>
         <tbody></tbody>
       </table>
+    </div>
+    
+    <div class="schedule-legend">
+      <div class="legend-title">Schedule Status</div>
+      <div class="legend-items">
+        <div class="legend-item">
+          <span class="legend-indicator current-shift-indicator"></span>
+          <span>Current Shift</span>
+        </div>
+        <div class="legend-item">
+          <span class="legend-indicator event-no-dj-indicator"></span>
+          <span>Special Event (No DJ Required)</span>
+        </div>
+        <div class="legend-item">
+          <span class="legend-indicator event-with-dj-indicator"></span>
+          <span>Special Event (DJ Required)</span>
+        </div>
+      </div>
     </div>
   </div>
   
@@ -170,10 +189,177 @@
           }
           tableBody.appendChild(tr);
         });
+        
+        // Añadir esta línea al final de fetchSchedule
+        fetchSpecialEvents();
+        
       } catch (error) {
         console.error('Error fetching schedule:', error);
         document.querySelector('#schedule-table tbody').innerHTML =
           '<tr><td colspan="8">Failed to load schedule.</td></tr>';
+      }
+    }
+
+    // Añadir estas nuevas funciones
+    async function fetchSpecialEvents() {
+      try {
+        const SHEET_ID = '1gr_yWuMPAHMUOFo4A3mTin6vqKrlK3CiCsNL98WnMF0';
+        const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?sheet=Eventos&tqx=out:json`;
+        
+        const response = await fetch(url);
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        
+        const text = await response.text();
+        const jsonText = text.substring(47).slice(0, -2);
+        const data = JSON.parse(jsonText);
+        
+        const values = data.table.rows.map(row => {
+          return row.c.map((cell, index) => {
+            if (!cell) return '';
+            return cell.v || '';
+          });
+        });
+        
+        processSpecialEvents(values);
+      } catch (error) {
+        console.error('Error fetching special events:', error);
+      }
+    }
+
+    function processSpecialEvents(events) {
+      if (!events || events.length === 0) return;
+      
+      let legendContainer = document.getElementById('events-legend');
+      if (!legendContainer) {
+        legendContainer = document.createElement('div');
+        legendContainer.id = 'events-legend';
+        legendContainer.className = 'events-legend';
+        document.querySelector('.container').appendChild(legendContainer);
+      } else {
+        legendContainer.innerHTML = '';
+      }
+      
+      const legendTitle = document.createElement('h3');
+      legendTitle.textContent = 'Special Events';
+      legendContainer.appendChild(legendTitle);
+      
+      const today = new Date();
+      const currentDay = today.getDay();
+      const mondayOffset = currentDay === 0 ? -6 : 1 - currentDay;
+      const currentWeekMonday = new Date(today);
+      currentWeekMonday.setDate(today.getDate() + mondayOffset);
+      currentWeekMonday.setHours(0, 0, 0, 0);
+      
+      const currentWeekSunday = new Date(currentWeekMonday);
+      currentWeekSunday.setDate(currentWeekMonday.getDate() + 6);
+      currentWeekSunday.setHours(23, 59, 59, 999);
+      
+      let hasEvents = false;
+      
+      events.forEach(event => {
+        if (!event[0] || !event[1]) return;
+        
+        const [dateStr, venue, dj, djRequired, time, description] = event;
+        
+        if (venue !== 'DRIFT') return;
+        
+        const dateParts = dateStr.split('/');
+        if (dateParts.length !== 3) return;
+        
+        const day = parseInt(dateParts[0], 10);
+        const month = parseInt(dateParts[1], 10) - 1;
+        const year = parseInt(dateParts[2], 10);
+        
+        const eventDate = new Date(year, month, day);
+        eventDate.setHours(0, 0, 0, 0);
+        
+        if (eventDate < currentWeekMonday || eventDate > currentWeekSunday) return;
+        
+        hasEvents = true;
+        
+        const eventDayOfWeek = eventDate.getDay();
+        let tableColumnIndex = eventDayOfWeek === 0 ? 7 : eventDayOfWeek;
+        
+        const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+        
+        const eventElement = document.createElement('div');
+        eventElement.className = 'special-event';
+        eventElement.innerHTML = `
+          <div class="event-date">
+            <span class="event-indicator ${djRequired === 'Yes' ? 'event-with-dj' : 'event-no-dj'}"></span>
+            ${dateStr} (${dayNames[eventDayOfWeek]})
+          </div>
+          <div class="event-details">
+            <strong>${venue}</strong>
+            <p class="event-info">
+              ${time ? `<span class="event-time">🕒 ${time}</span>` : ''}
+              ${description ? `<span class="event-description">📝 ${description}</span>` : ''}
+              <span class="dj-status">👤 ${djRequired === 'Yes' ? 
+                `DJ must attend (${dj})` : 
+                dj ? `DJ not required (${dj})` : 
+                'No DJ assigned'}</span>
+            </p>
+          </div>
+        `;
+        legendContainer.appendChild(eventElement);
+        
+        markSpecialEventInTable(tableColumnIndex, venue, dj, time, djRequired === 'Yes');
+      });
+      
+      if (!hasEvents) {
+        legendContainer.style.display = 'none';
+      } else {
+        legendContainer.style.display = 'block';
+      }
+    }
+
+    function markSpecialEventInTable(dayOfWeek, venue, dj, time, djRequired) {
+      const table = document.getElementById('schedule-table');
+      if (!table) return;
+      
+      const rows = table.querySelectorAll('tbody tr');
+      let marked = false;
+      
+      const eventTime = time || '';
+      const eventTimeMatch = eventTime.match(/(\d+)(?::(\d+))?\s*-\s*(\d+)(?::(\d+))?/);
+      
+      for (let i = 0; i < rows.length; i++) {
+        const row = rows[i];
+        const cells = row.querySelectorAll('td');
+        if (cells.length < 8) continue;
+        
+        const dayCell = cells[dayOfWeek];
+        if (!dayCell) continue;
+        
+        const cellText = dayCell.textContent || '';
+        
+        if (dj && dj.trim() !== '') {
+          const djCell = cells[0];
+          const rowDjName = djCell ? djCell.textContent.trim() : '';
+          
+          if (rowDjName.toLowerCase() === dj.toLowerCase()) {
+            dayCell.classList.remove('current-shift');
+            dayCell.classList.add('special-event-cell');
+            
+            if (djRequired) {
+              dayCell.classList.add('dj-required');
+            }
+            
+            dayCell.setAttribute('title', djRequired ? 'EVENT - DJ Required' : 'EVENT/No DJ needed');
+            dayCell.innerHTML = `DRIFT - EVENT <span class="event-cell-indicator"></span>`;
+            marked = true;
+            break;
+          }
+        } else if (eventTimeMatch) {
+          const cellTimeMatch = cellText.match(/(\d+)(?::(\d+))?\s*-\s*(\d+)(?::(\d+))?/);
+          if (cellTimeMatch && cellTimeMatch[0] === eventTimeMatch[0]) {
+            dayCell.classList.remove('current-shift');
+            dayCell.classList.add('special-event-cell');
+            dayCell.setAttribute('title', 'EVENT/No DJ needed');
+            dayCell.innerHTML = `DRIFT - EVENT <span class="event-cell-indicator"></span>`;
+            marked = true;
+          }
+        }
       }
     }
 
