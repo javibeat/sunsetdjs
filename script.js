@@ -160,19 +160,40 @@ async function fetchSchedule() {
         }
         
         if (i >= 1 && i <= 7 && cellValue !== '—') {
+          // Modificar la expresión regular para capturar AM/PM explícitamente
           const timeMatch = cellValue.match(
-            /(\d+)(?::(\d+))?\s*-\s*(\d+)(?::(\d+))?/i
+            /(\d+)(?::(\d+))?\s*(?:([ap]m))?\s*-\s*(\d+)(?::(\d+))?\s*(?:([ap]m))?/i
           );
           
           if (timeMatch) {
-            let [ , startH, startM, endH, endM ] = timeMatch;
+            let [, startH, startM, startAMPM, endH, endM, endAMPM] = timeMatch;
             startH = parseInt(startH, 10);
             endH = parseInt(endH, 10);
             startM = parseInt(startM || '0', 10);
             endM = parseInt(endM || '0', 10);
             
-            if (startH < 12) startH += 12;
-            if (endH < 12) endH += 12;
+            // Convertir a formato 24 horas basado en AM/PM capturado
+            const isStartAM = startAMPM && startAMPM.toLowerCase() === 'am';
+            const isEndPM = endAMPM && endAMPM.toLowerCase() === 'pm';
+            
+            // Si no se capturó AM/PM, usar la detección basada en texto
+            if (!startAMPM) {
+              const textStartAM = cellValue.toLowerCase().includes('am') && !cellValue.toLowerCase().includes('ammos');
+              if (!textStartAM && startH < 12) startH += 12;
+            } else {
+              // Si se capturó AM/PM, usar esa información
+              if (isStartAM && startH === 12) startH = 0; // 12 AM = 0 horas
+              if (!isStartAM && startH < 12) startH += 12; // PM y no es 12, sumar 12
+            }
+            
+            if (!endAMPM) {
+              const textEndPM = cellValue.toLowerCase().includes('pm');
+              if (textEndPM && endH < 12) endH += 12;
+            } else {
+              // Si se capturó AM/PM, usar esa información
+              if (!isEndPM && endH === 12) endH = 0; // 12 AM = 0 horas
+              if (isEndPM && endH < 12) endH += 12; // PM y no es 12, sumar 12
+            }
             
             const scheduleStart = startH * 60 + startM;
             const scheduleEnd = endH * 60 + endM;
@@ -180,6 +201,8 @@ async function fetchSchedule() {
             const currentTime = now.getHours() * 60 + now.getMinutes();
             const currentDay = now.getDay();
             const dayIndex = (currentDay === 0) ? 7 : currentDay;
+            
+            console.log(`Celda: ${cellValue}, Hora actual: ${now.getHours()}:${now.getMinutes()}, Inicio: ${startH}:${startM}, Fin: ${endH}:${endM}, Es turno actual: ${i === dayIndex && currentTime >= scheduleStart && currentTime < scheduleEnd}`);
             
             if (i === dayIndex && currentTime >= scheduleStart && currentTime < scheduleEnd) {
               td.classList.add('current-shift');
@@ -482,8 +505,13 @@ function processRowForCalendar(row, djName, currentMonth, currentYear, currentDa
         startM = parseInt(startM || '0', 10);
         endM = parseInt(endM || '0', 10);
         
-        if (startH < 12) startH += 12;
-        if (endH < 12) endH += 12;
+        // Verificar si el texto del horario contiene indicadores de AM/PM
+        const isStartAM = shift.toLowerCase().includes('am') && !shift.toLowerCase().includes('ammos');
+        const isEndPM = shift.toLowerCase().includes('pm');
+        
+        // Convertir correctamente las horas según AM/PM
+        if (!isStartAM && startH < 12) startH += 12; // Solo añadir 12 si es PM
+        if (isEndPM && endH < 12) endH += 12; // Añadir 12 a horas PM menores que 12
         
         const venue = shift.split(' ')[0];
         
