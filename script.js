@@ -160,34 +160,13 @@ async function fetchSchedule() {
         }
         
         if (i >= 1 && i <= 7 && cellValue !== '—') {
-          const timeMatch = cellValue.match(
-            /(\d+)(?::(\d+))?\s*-\s*(\d+)(?::(\d+))?/i
-          );
-          
-          if (timeMatch) {
-            let [ , startH, startM, endH, endM ] = timeMatch;
-            startH = parseInt(startH, 10);
-            endH = parseInt(endH, 10);
-            startM = parseInt(startM || '0', 10);
-            endM = parseInt(endM || '0', 10);
-            
-            if (startH < 12) startH += 12;
-            if (endH < 12) endH += 12;
-            
-            const scheduleStart = startH * 60 + startM;
-            const scheduleEnd = endH * 60 + endM;
-            const now = new Date();
-            const currentTime = now.getHours() * 60 + now.getMinutes();
-            const currentDay = now.getDay();
-            const dayIndex = (currentDay === 0) ? 7 : currentDay;
-            
-            if (i === dayIndex && currentTime >= scheduleStart && currentTime < scheduleEnd) {
-              td.classList.add('current-shift');
-            }
+          const now = new Date();
+          const currentDay = now.getDay() === 0 ? 7 : now.getDay();
+          if (i === currentDay && isCurrentShift(cellValue, currentDay, i)) {
+            td.classList.add('current-shift');
           }
-          
-          if (cellValue.includes('DRIFT') || cellValue.includes('AZURE') || 
-              cellValue.includes('AURA') || cellValue.includes('AMMOS') || 
+          if (cellValue.includes('DRIFT') || cellValue.includes('AZURE') ||
+              cellValue.includes('AURA') || cellValue.includes('AMMOS') ||
               cellValue.includes('BAOLI')) {
             td.setAttribute('data-venue', cellValue.split(' ')[0]);
           }
@@ -481,10 +460,10 @@ function processRowForCalendar(row, djName, currentMonth, currentYear, currentDa
         endH = parseInt(endH, 10);
         startM = parseInt(startM || '0', 10);
         endM = parseInt(endM || '0', 10);
-        
+
         if (startH < 12) startH += 12;
         if (endH < 12) endH += 12;
-        
+
         const venue = shift.split(' ')[0];
         
         // Calcular todas las fechas del mes para este día de la semana
@@ -598,3 +577,52 @@ window.addEventListener('DOMContentLoaded', () => {
 
 // También ejecutar cuando cambie el tamaño de la ventana
 window.addEventListener('resize', setupStickyColumn);
+
+function isCurrentShift(cellText, currentDay, dayIndex) {
+  if (!cellText || cellText === '—') return false;
+
+  const timeMatch = cellText.match(/(\d+)(?::(\d+))?\s*(am|pm)?\s*-\s*(\d+)(?::(\d+))?\s*(am|pm)?/i);
+  if (!timeMatch) return false;
+
+  let [, startH, startM = '0', startP, endH, endM = '0', endP] = timeMatch;
+
+  // Convertir a números
+  startH = parseInt(startH, 10);
+  startM = parseInt(startM, 10);
+  endH = parseInt(endH, 10);
+  endM = parseInt(endM, 10);
+
+  // Si hay AM/PM definidos, usarlos
+  if (startP) {
+    if (startP.toLowerCase() === 'pm' && startH < 12) startH += 12;
+    if (startP.toLowerCase() === 'am' && startH === 12) startH = 0;
+  } else {
+    if (startH < 12) startH += 12; // Asumir PM si no se especifica
+  }
+
+  if (endP) {
+    if (endP.toLowerCase() === 'pm' && endH < 12) endH += 12;
+    if (endP.toLowerCase() === 'am' && endH === 12) endH = 0;
+  } else {
+    if (endH < 12) endH += 12; // Asumir PM si no se especifica
+  }
+
+  const now = new Date();
+  const currentHour = now.getHours();
+  const currentMinute = now.getMinutes();
+  const currentTime = currentHour * 60 + currentMinute;
+
+  const shiftStart = startH * 60 + startM;
+  const shiftEnd = endH * 60 + endM;
+
+  // Si el turno cruza la medianoche
+  if (shiftEnd <= shiftStart) {
+    if (currentDay === dayIndex) {
+      return currentTime >= shiftStart;
+    } else if (currentDay === (dayIndex % 7) + 1) {
+      return currentTime < shiftEnd;
+    }
+  }
+
+  return currentDay === dayIndex && currentTime >= shiftStart && currentTime < shiftEnd;
+}
