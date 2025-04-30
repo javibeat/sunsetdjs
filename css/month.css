@@ -1,0 +1,402 @@
+/* Reset básico */
+body, html {
+  margin: 0;
+  padding: 0;
+  font-family: 'Montserrat', Arial, sans-serif;
+  background: #f5f6fa;
+  color: #222;
+}
+
+/* Contenedor principal */
+.container {
+  max-width: 1100px;
+  margin: 40px auto;
+  padding: 24px 12px;
+  background: #fff;
+  border-radius: 18px;
+  box-shadow: 0 6px 32px rgba(0,0,0,0.07);
+}
+
+/* Título */
+.container h1 {
+  text-align: center;
+  font-size: 2.2rem;
+  font-weight: 700;
+  margin-bottom: 32px;
+  letter-spacing: 1px;
+}
+
+/* Tabla */
+#weekly-schedule-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #fff;
+  font-size: 1rem;
+}
+
+#weekly-schedule-table th,
+#weekly-schedule-table td {
+  padding: 12px 10px;
+  border: 1px solid #e3e6f0;
+  text-align: center;
+  min-width: 110px;
+  background: #fff;
+}
+
+#weekly-schedule-table th,
+#weekly-schedule-table .main-header {
+  background: #0066cc;
+  color: #fff;
+  font-weight: 600;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+#weekly-schedule-table td:first-child {
+  background: #f5f6fa;
+  color: #1565c0;
+  font-weight: bold;
+  position: sticky;
+  left: 0;
+  z-index: 11;
+}
+
+#weekly-schedule-table tr:nth-child(even) td {
+  background: #f7fafd;
+}
+
+#weekly-schedule-table tr:hover td {
+  background: #e3f0ff;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .container {
+    padding: 8px 2px;
+  }
+  #weekly-schedule-table th,
+  #weekly-schedule-table td {
+    font-size: 0.95rem;
+    min-width: 80px;
+    padding: 8px 4px;
+  }
+  .container h1 {
+    font-size: 1.3rem;
+  }
+}
+
+@media (max-width: 600px) {
+  .container {
+    padding: 2px 0;
+    margin: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
+  #weekly-schedule-table th,
+  #weekly-schedule-table td {
+    font-size: 0.8rem;
+    min-width: 60px;
+    padding: 4px 2px;
+  }
+}
+.dj-active {
+  background-color: #00b02c !important;
+  color: #155724;
+  font-weight: bold;
+}
+
+.event-with-dj {
+  background-color: #ffcccc !important; /* Cambiar a rojo para eventos con DJ */
+  color: #b31f2e;
+  font-weight: bold;
+}
+
+.event-no-dj {
+  background-color: #ffeeba !important; /* Cambiar a amarillo para eventos sin DJ */
+  color: #856404;
+  font-weight: bold;
+}
+
+.event-legend {
+  margin: 24px 0 8px 0;
+  font-size: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  background: #f9f9f9;
+  border-radius: 8px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.9rem;
+}
+
+.legend-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.legend-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.legend-title {
+  font-weight: 600;
+  color: #333;
+}
+
+.legend-details {
+  font-size: 0.85rem;
+  color: #666;
+}
+.special-events-list {
+  margin-top: 20px;
+}
+
+.special-event-row {
+  padding: 12px;
+  border-bottom: 1px solid #e3e6f0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+.special-event-row strong {
+  color: #333;
+  min-width: 200px;
+}
+
+.event-details {
+  display: flex;
+  gap: 15px;
+  color: #666;
+  flex-wrap: wrap;
+}
+
+.legend-items {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.legend-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+}
+
+.legend-green {
+  background-color: #00b02c;
+}
+
+.legend-red {
+  background-color: #ff2600;
+}
+
+.legend-orange {
+  background-color: #FFA500;
+}
+
+.special-event-row strong {
+  margin-right: 8px;
+}
+.special-event-row span {
+  margin-right: 8px;
+}
+
+.event-with-dj {
+    background-color: #FFA500; /* Naranja para eventos que requieren DJ */
+    color: white;
+    font-weight: bold;
+}
+
+.event-no-dj {
+    background-color: #ff2600; /* Rojo para eventos que no requieren DJ */
+    color: white;
+    font-weight: bold;
+}
+
+/* Eliminar los estilos duplicados y conflictivos actuales */
+.event-with-dj {
+    background-color: #FFA500 !important; /* Naranja para eventos CON DJ */
+    color: white;
+    font-weight: bold;
+}
+
+.event-no-dj {
+    background-color: #ff2600 !important; /* Rojo para eventos SIN DJ */
+    color: white;
+    font-weight: bold;
+}
+
+.legend-dot {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    margin-right: 5px;
+}
+
+.legend-green {
+    background-color: #00b02c;
+}
+
+.legend-orange {
+    background-color: #FFA500; /* Naranja para leyenda */
+}
+
+.legend-red {
+    background-color: #ff2600; /* Rojo para leyenda */
+}
+
+.month-warning {
+    background-color: #fff3cd;
+    color: #856404;
+    padding: 1rem;
+    border-radius: 0.25rem;
+    margin: 1rem 0;
+    text-align: center;
+    border: 1px solid #ffeeba;
+}
+
+/* Agregar los estilos correctos de events.css */
+.events-legend {
+  margin-top: 30px;
+  padding: 15px;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.events-legend h3 {
+  margin-top: 0;
+  color: #333;
+  border-bottom: 1px solid #ddd;
+  padding-bottom: 10px;
+  margin-bottom: 15px;
+}
+
+.special-event {
+  display: flex;
+  margin-bottom: 15px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid #eee;
+}
+
+.event-date {
+  min-width: 150px;
+  font-weight: bold;
+  color: #555;
+  text-transform: capitalize;
+}
+
+.event-details {
+  flex: 1;
+}
+
+.event-indicator {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  margin-right: 8px;
+}
+
+.event-with-dj-indicator {
+  background-color: #ff9800;
+}
+
+.event-no-dj-indicator {
+  background-color: #f44336;
+}
+
+.current-shift-indicator {
+  background-color: #4CAF50;
+}
+
+/* Estilos para la sección de eventos especiales */
+.schedule-status {
+    background: white;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.status-indicators {
+    display: flex;
+    gap: 20px;
+    margin-top: 10px;
+}
+
+.status-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.status-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+}
+
+.current-shift {
+    background-color: #4CAF50;
+}
+
+.special-no-dj {
+    background-color: #f44336;
+}
+
+.special-dj {
+    background-color: #ff9800;
+}
+
+.special-event-item {
+    background: white;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.event-header {
+    font-size: 1.1em;
+    margin-bottom: 10px;
+}
+
+.event-header strong {
+    margin-right: 10px;
+    color: #333;
+}
+
+.event-info {
+    display: flex;
+    gap: 15px;
+    color: #666;
+    font-size: 0.9em;
+}
+
+.time-icon, .event-type, .dj-status {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
